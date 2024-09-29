@@ -62,3 +62,19 @@ void ls (char *inputCommand, char **args, int* argc) {
     FindClose(hFind);
     return;
 }
+
+void cd(char *inputCommand, char **args, int* argc) {
+    if(*argc < 2) {
+        return;
+    }
+
+    if(_chdir(args[1]) != 0) {
+        printf("Invalid directory.\n");
+    }
+
+    return;
+}
+
+void clear(char *inputCommand, char **args, int* argc) {
+    system("cls");
+}

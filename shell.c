@@ -6,7 +6,7 @@
 #include <lmcons.h>
 #include "commands.c"
 
-#define SHELL_PREFIX "$->"
+#define SHELL_PREFIX "~ "
 #define MAX_INPUT  1024
 #define MAX_ARGS 100
 
@@ -21,23 +21,30 @@ int main() {
     char username[UNLEN + 1];
     DWORD username_len = sizeof(username);
     GetUserName(username, &username_len);
+
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
     char input[MAX_INPUT];
 
     Command commands[] = {
         { "echo", echo },
-        { "ls", ls }
+        { "ls", ls },
+        { "cd", cd },
+        { "clear", clear }
     };
 
     int commandc = sizeof(commands) / sizeof(Command);
 
     while (1) {
         char cwd[MAX_PATH];
+        int validCommand = 0;
         if(_getcwd(cwd, sizeof(cwd)) == NULL) {
             printf("Unexpected Error!");
         }
-        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-        SetConsoleTextAttribute(hConsole, 14);
-        printf("%s MingW64 %s\n", username, cwd);
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_BLUE);
+        printf("\033[1m[%s MinGW64] \033[0m", username);
+        SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_BLUE);
+        printf("\033[1m%s\033[0m\n", cwd);
         SetConsoleTextAttribute(hConsole, 7);
         printf(SHELL_PREFIX);
         fflush(stdout);
@@ -66,8 +73,13 @@ int main() {
         args[argc] = NULL;
         for (int i = 0; i < commandc; i++) {
             if(strcmp(commands[i].name, inputCommand) == 0) {
+                validCommand = 1;
                 commands[i].func(inputCommand, args, &argc);
             }
+        }
+
+        if (validCommand == 0) {
+            printf("'%s' is not a valid command.\n", inputCommand);
         }
 
         printf("\n");
