@@ -76,6 +76,11 @@ void cd(char *inputCommand, char **args, int* argc) {
     return;
 }
 
-void clear(char *inputCommand, char **args, int* argc) {
+void clear() {
     system("cls");
+    return;
+}
+
+void exitShell() {
+    exit(0);
 }
