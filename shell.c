@@ -4,6 +4,7 @@
 #include <direct.h>
 #include <limits.h>
 #include <lmcons.h>
+#include <ctype.h>
 #include "commands.c"
 
 #define SHELL_PREFIX "~ "
@@ -33,7 +34,7 @@ int main() {
         { "clear", clear }
     };
 
-    int commandc = sizeof(commands) / sizeof(Command);
+    int commandCount = sizeof(commands) / sizeof(Command);
 
     while (1) {
         char cwd[MAX_PATH];
@@ -66,15 +67,24 @@ int main() {
         while(token != NULL && argc < MAX_ARGS - 1) {
             if(argc == 0) {
                 inputCommand = token;
+                strcat(inputCommand, "\0");
             }
             args[argc++] = token;
             token = strtok(NULL, " \n");
         }
+
         args[argc] = NULL;
-        for (int i = 0; i < commandc; i++) {
-            if(strcmp(commands[i].name, inputCommand) == 0) {
+
+        char *lowerCaseCommand = malloc(sizeof(inputCommand));
+        for(int i = 0; inputCommand[i] != '\0'; i++) {
+            lowerCaseCommand[i] = tolower(inputCommand[i]);
+        }
+        lowerCaseCommand[strlen(inputCommand)] = '\0';   
+
+        for (int i = 0; i < commandCount; i++) {
+            if(strcmp(commands[i].name, lowerCaseCommand) == 0) {
                 validCommand = 1;
-                commands[i].func(inputCommand, args, &argc);
+                commands[i].func(lowerCaseCommand, args, &argc);
             }
         }
 
@@ -83,6 +93,7 @@ int main() {
         }
 
         printf("\n");
+        free(lowerCaseCommand);
     }
 
     return 0;
