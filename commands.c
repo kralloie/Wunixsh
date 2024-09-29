@@ -4,8 +4,9 @@
 
 void echo(char *inputCommand, char **args, int* argc) {
     int outputLen = 0;
+
     for (int i = 0; i < *argc; i++) {
-        outputLen += sizeof(args[i]) / sizeof(char) + 1;
+        outputLen += strlen(args[i]) + 1;
     }
 
     char *output = malloc(outputLen * sizeof(char));

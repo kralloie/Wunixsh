@@ -7,7 +7,7 @@
 #include "commands.c"
 
 #define SHELL_PREFIX "~ "
-#define MAX_INPUT  1024
+#define MAX_INPUT 1024
 #define MAX_ARGS 100
 
 typedef void (*CommandFunc)(char*, char**, int*);
@@ -42,7 +42,7 @@ int main() {
             printf("Unexpected Error!");
         }
         SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_BLUE);
-        printf("\033[1m[%s MinGW64] \033[0m", username);
+        printf("\033[1m[%s MinGW64] - \033[0m", username);
         SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_BLUE);
         printf("\033[1m%s\033[0m\n", cwd);
         SetConsoleTextAttribute(hConsole, 7);
