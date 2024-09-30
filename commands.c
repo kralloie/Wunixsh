@@ -11,6 +11,39 @@ int getCursorY() {
     }
 }
 
+int getFilesCount(char* path) {
+    int fileCount  = 0;
+    WIN32_FIND_DATA fileData;
+    HANDLE hFind;
+    hFind = FindFirstFile(path, &fileData);
+    if (hFind == INVALID_HANDLE_VALUE) {
+        return 0;
+    }
+
+    do {
+        fileCount++;
+    } while(FindNextFile(hFind, &fileData) != 0);
+    FindClose(hFind);
+    return fileCount;
+}
+
+int *getFilesLen(char *path, const int fileCount) {
+    int *filesLen = malloc(fileCount * sizeof(int));
+    int index = 0;
+    WIN32_FIND_DATA fileData;
+    HANDLE hFind;
+    hFind = FindFirstFile(path, &fileData);
+    if (hFind == INVALID_HANDLE_VALUE) {
+        return 0;
+    }
+
+    do {
+        filesLen[index++] = strlen(fileData.cFileName) + 1;
+    } while(FindNextFile(hFind, &fileData) != 0);
+    FindClose(hFind);
+    return filesLen;
+}
+
 void printHistory(char** history, int *historyCount) {
     printf("\n");
     printf("---------History---------\n");

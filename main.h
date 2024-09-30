@@ -39,6 +39,8 @@ void cd(char *inputCommand, char **args, int *argc);
 void clear(char*, char**, int*);
 void exitShell(char*, char**, int*);
 int getCursorY();
+int getFilesCount(char* path);
+int *getFilesLen(char* path, int fileCount);
 void printHistory(char **history, int *historyCount);
 char username[UNLEN + 1];
 DWORD username_len = sizeof(username);
@@ -48,7 +50,7 @@ Command commands[] = {
     { "ls", ls },
     { "cd", cd },
     { "clear", clear },
-    { "exit", exitShell },
+    { "exit", exitShell }
 };
 
 const int commandCount = sizeof(commands) / sizeof(Command);

@@ -54,10 +54,36 @@ int main() {
                     break;
                 }
                 case TAB_KEY: {
-                    strcat(input, "_completed");
-                    index += strlen("_completed");
-                    printf("\r~ %s", input);  
-                    fflush(stdout);
+                    if (index > 0) {
+                        char path[MAX_PATH];
+                        snprintf(path, sizeof(path), "%s\\*", cwd);
+                        int fileCount = getFilesCount(path);
+                        if (fileCount > 0) {
+                            int fileIndex = 0;
+                            int *fileLengths = getFilesLen(path, fileCount);
+                            char **files = malloc(fileCount * sizeof(char*));
+                            for(int i = 0; i < fileCount; i++) {    
+                                files[i] = malloc(fileLengths[i] * sizeof(char));
+                            }
+                            WIN32_FIND_DATA findFileData;
+                            HANDLE hFind;
+                            hFind = FindFirstFile(path, &findFileData);
+                            do {
+                                strcpy(files[fileIndex++], findFileData.cFileName);
+                            } while(FindNextFile(hFind, &findFileData) != 0);
+                            FindClose(hFind);
+
+                            for(int i = 0; i < fileCount; i++) {
+                                if(strncmp(files[i], input, strlen(input)) == 0) {
+                                    memset(input, '\0', strlen(input));
+                                    strcpy(input, files[i]);
+                                    printf("\r~ %s", input);
+                                    index = strlen(input);  
+                                    fflush(stdout);
+                                }
+                            }
+                        }
+                    }
                     break;
                 }
                 case BACKSPACE: {
@@ -84,7 +110,7 @@ int main() {
                     switch (ch) {
                         case UP_ARROW: {
                             if(historyCount > 0) {
-                                memset(input, '\0', sizeof(input));
+                                memset(input, '\0', strlen(input));
                                 strcpy(input, history[historyCount - 1 - historyIndex]);
                                 printf("\r\033[K~ %s", history[historyCount - 1 - historyIndex]);
                                 historyIndex = (historyIndex + 1) % historyCount;
@@ -95,7 +121,7 @@ int main() {
                         }
                         case DOWN_ARROW: {
                             if(historyCount > 0) {
-                                memset(input, '\0', sizeof(input));
+                                memset(input, '\0', strlen(input));
                                 strcpy(input, history[historyCount - 1 - historyIndex]);
                                 printf("\r\033[K~ %s", history[historyCount - 1 - historyIndex]);
                                 historyIndex = historyIndex > 0 ? historyIndex - 1 : historyCount - 1;
