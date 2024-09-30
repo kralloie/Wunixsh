@@ -59,6 +59,15 @@ int main() {
                         snprintf(path, sizeof(path), "%s\\*", cwd);
                         int fileCount = getFilesCount(path);
                         if (fileCount > 0) {
+                            char *tokens[MAX_ARGS];
+                            int tokenCount = 0;
+                            char *token;
+                            token = strtok(input, " \n");
+                            while (token != NULL) {
+                                tokens[tokenCount++] = strdup(token);
+                                token = strtok(NULL, " \n");
+                            }
+                            char *lastToken = strdup(tokens[tokenCount - 1]);
                             int fileIndex = 0;
                             int *fileLengths = getFilesLen(path, fileCount);
                             char **files = malloc(fileCount * sizeof(char*));
@@ -72,16 +81,55 @@ int main() {
                                 strcpy(files[fileIndex++], findFileData.cFileName);
                             } while(FindNextFile(hFind, &findFileData) != 0);
                             FindClose(hFind);
-
+                            int matchCount = 0;
                             for(int i = 0; i < fileCount; i++) {
-                                if(strncmp(files[i], input, strlen(input)) == 0) {
-                                    memset(input, '\0', strlen(input));
-                                    strcpy(input, files[i]);
-                                    printf("\r~ %s", input);
-                                    index = strlen(input);  
-                                    fflush(stdout);
+                                if(strncmp(files[i], lastToken, strlen(lastToken)) == 0) {
+                                    matchCount++;
                                 }
                             }
+                            
+                            if(matchCount == 0) {
+                                break;
+                            }
+
+                            char **matches = malloc(matchCount * sizeof(char*));
+                            int matchIndex = 0;
+                            int maxLen = 0;
+                            for(int i = 0; i < fileCount; i++) {
+                                if(strncmp(files[i], lastToken, strlen(lastToken)) == 0) {
+                                    maxLen = (strlen(files[i]) > maxLen) ? strlen(files[i]) : maxLen;
+                                    matches[matchIndex] = malloc(strlen(files[i]) * sizeof(char));
+                                    strcpy(matches[matchIndex++], files[i]);
+                                }
+                            }
+                            char *match = malloc(maxLen + 1);
+                            memset(match, '\0', maxLen + 1);
+                            match[0] = lastToken[0];
+                            for(int i = 1; i < maxLen; i++) {
+                                for(int j = 0; j < matchCount; j++) {
+                                    char nextMatchChar = matches[j][i];
+                                    int charMatchCount = 0;
+                                    for(int k = 0; k < matchCount; k++) {
+                                        if (matches[k][i] == nextMatchChar) {
+                                            charMatchCount++;
+                                        }
+                                    }
+                                    if (charMatchCount == matchCount) {
+                                        match[i] = nextMatchChar;
+                                    }
+                                }
+                            }
+                            input[0] = '\0';
+                            if(tokenCount > 1) {
+                                for (int i = 0; i < tokenCount - 1; i++) {
+                                    strcat(input, tokens[i]);
+                                    strcat(input, " ");
+                                }
+                            }
+                            strcat(input, match);
+                            printf("\r~ %s", input);
+                            index = strlen(input);  
+                            fflush(stdout);
                         }
                     }
                     break;
@@ -167,7 +215,7 @@ int main() {
             int argc = 0;
 
             token = strtok(input, " \n");
-            while(token != NULL && argc < MAX_ARGS - 1) {
+            while (token != NULL && argc < MAX_ARGS - 1) {
                 if(argc == 0) {
                     inputCommand = token;
                     strcat(inputCommand, "\0");
