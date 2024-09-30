@@ -1,25 +1,10 @@
-#include <windows.h>
-#include <stdio.h>
-#include <string.h>
-#include <direct.h>
-#include <conio.h>
-#include <limits.h>
-#include <lmcons.h>
-#include <ctype.h>
-#include <signal.h>
-#include "tools.c"
-#include "commands.c"
+#include "main.h"
 
 int main() {
     char *history[MAX_HISTORY];
     int historyCount = 0;
-    
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    char username[UNLEN + 1];
-    DWORD username_len = sizeof(username);
     GetUserName(username, &username_len);
-
-    int commandCount = sizeof(commands) / sizeof(Command);
 
     while (RUNNING) {
         SYSTEMTIME time;
@@ -43,8 +28,8 @@ int main() {
         char input[MAX_INPUT];
         unsigned char ch;
         int index = 0;
-        int gettingInput = 1;
-        while (gettingInput == 1) {
+        int gettingInput = 1;   
+        while (gettingInput) {
             ch = _getch();
             switch (ch) {
                 case ENTER_KEY: {
@@ -134,7 +119,7 @@ int main() {
                     break;
                 }
                 case 0x03: { // CTRL + C
-                    exitShell();
+                    exitShell(NULL, NULL, NULL);
                     break;
                 } 
                 default: {

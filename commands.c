@@ -1,13 +1,27 @@
 #pragma once
 
-#include <windows.h>
+int getCursorY() {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-typedef void (*CommandFunc)(char*, char**, int*);
+    if(GetConsoleScreenBufferInfo(hConsole, &csbi)) {
+        return csbi.dwCursorPosition.Y + 1;
+    } else {
+        return 0;
+    }
+}
 
-typedef struct Command {
-    const char* name;
-    CommandFunc func;
-} Command;
+void printHistory(char** history, int *historyCount) {
+    printf("\n");
+    printf("---------History---------\n");
+    printf("Last Position: %s\n", history[*historyCount - 1]);
+    printf("History Count: %d\n", *historyCount);
+    for(int i = 0; i < *historyCount; i++ ) {
+        printf("%s - ", history[i]);
+    }
+    printf("\n");
+    printf("---------History---------\n");
+}
 
 void echo(char *inputCommand, char **args, int* argc) {
     int outputLen = 0;
@@ -83,19 +97,11 @@ void cd(char *inputCommand, char **args, int* argc) {
     return;
 }
 
-void clear() {
+void clear(char* _, char**__, int*___) {
     system("cls");
     return;
 }
 
-void exitShell() {
+void exitShell(char*_, char**__, int*___) {
     exit(0);
 }
-
-const Command commands[] = {
-    { "echo", echo },
-    { "ls", ls },
-    { "cd", cd },
-    { "clear", clear },
-    { "exit", exitShell }
-};
