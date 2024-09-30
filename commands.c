@@ -2,6 +2,13 @@
 
 #include <windows.h>
 
+typedef void (*CommandFunc)(char*, char**, int*);
+
+typedef struct Command {
+    const char* name;
+    CommandFunc func;
+} Command;
+
 void echo(char *inputCommand, char **args, int* argc) {
     int outputLen = 0;
 
@@ -84,3 +91,11 @@ void clear() {
 void exitShell() {
     exit(0);
 }
+
+const Command commands[] = {
+    { "echo", echo },
+    { "ls", ls },
+    { "cd", cd },
+    { "clear", clear },
+    { "exit", exitShell }
+};

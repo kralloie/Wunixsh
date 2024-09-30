@@ -7,48 +7,8 @@
 #include <lmcons.h>
 #include <ctype.h>
 #include <signal.h>
+#include "tools.c"
 #include "commands.c"
-
-#define SHELL_PREFIX "~ "
-#define MAX_INPUT 1024
-#define MAX_ARGS 100
-#define RUNNING 1
-#define TAB_KEY 9
-#define ENTER_KEY 13
-#define BACKSPACE 8
-#define MAX_INPUT 1024
-#define SPACEBAR 32
-#define UP_ARROW 0x48
-#define DOWN_ARROW 0x50
-#define RIGHT_ARROW 0x4D
-#define LEFT_ARROW 0x4B
-#define MAX_HISTORY 100
-
-typedef void (*CommandFunc)(char*, char**, int*);
-
-typedef struct Command {
-    const char* name;
-    CommandFunc func;
-} Command;
-
-const Command commands[] = {
-    { "echo", echo },
-    { "ls", ls },
-    { "cd", cd },
-    { "clear", clear },
-    { "exit", exitShell }
-};
-
-int getCursorY() {
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);;
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-
-    if(GetConsoleScreenBufferInfo(hConsole, &csbi)) {
-        return csbi.dwCursorPosition.Y + 1;
-    } else {
-        return 0;
-    }
-}
 
 int main() {
     char *history[MAX_HISTORY];
@@ -89,15 +49,12 @@ int main() {
             switch (ch) {
                 case ENTER_KEY: {
                     if (index > 0) {
-                        int notRepeated = 1;
                         input[index] = '\0';
                         if (historyCount > 0) {
                             for(int i = 0; i < historyCount; i++) {
                                 if (strcmp(input, history[i]) == 0) {
                                     free(history[i]);
                                     for(int j = i; j < historyCount - 1; j++) {
-                                        printf("\n");
-                                        printf("%s <- %s\n", history[j], history[j+1]);
                                         history[j] = strdup(history[j + 1]);
                                     }
                                     historyCount--;
@@ -106,16 +63,6 @@ int main() {
                             }
                         }
                         history[historyCount++] = strdup(input);
-                        // printf("\n");
-                        // printf("---------History---------\n");
-                        // printf("Next Command on History: %s\n", input);
-                        // printf("Last Position: %s\n", history[historyCount - 1]);
-                        // printf("History Count: %d\n", historyCount);
-                        // for(int i = 0; i < historyCount; i++ ) {
-                        //     printf("%s - ", history[i]);
-                        // }
-                        // printf("\n");
-                        // printf("---------History---------\n");
                     }
                     printf("\n");
                     gettingInput = 0;
