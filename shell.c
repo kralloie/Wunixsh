@@ -18,6 +18,11 @@
 #define BACKSPACE 8
 #define MAX_INPUT 1024
 #define SPACEBAR 32
+#define UP_ARROW 0x48
+#define DOWN_ARROW 0x50
+#define RIGHT_ARROW 0x4D
+#define LEFT_ARROW 0x4B
+#define MAX_HISTORY 100
 
 typedef void (*CommandFunc)(char*, char**, int*);
 
@@ -46,17 +51,20 @@ int getCursorY() {
 }
 
 int main() {
+    char *history[MAX_HISTORY];
+    int historyCount = 0;
+    
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     char username[UNLEN + 1];
     DWORD username_len = sizeof(username);
     GetUserName(username, &username_len);
-
 
     int commandCount = sizeof(commands) / sizeof(Command);
 
     while (RUNNING) {
         SYSTEMTIME time;
         GetSystemTime(&time);
+        int historyIndex = 0;
 
         char cwd[MAX_PATH];
         int validCommand = 0;
@@ -73,7 +81,7 @@ int main() {
         fflush(stdout);
 
         char input[MAX_INPUT];
-        char ch;
+        unsigned char ch;
         int index = 0;
         int gettingInput = 1;
         while (gettingInput == 1) {
@@ -82,6 +90,7 @@ int main() {
                 case ENTER_KEY: {
                     if (index > 0) {
                         input[index] = '\0';
+                        history[historyCount++] = strdup(input);
                     }
                     printf("\n");
                     gettingInput = 0;
@@ -95,6 +104,7 @@ int main() {
                     break;
                 }
                 case BACKSPACE: {
+                    historyIndex = 0;
                     if(index > 0) {
                         input[--index] = '\0';
                         printf("\r~ %s ", input);
@@ -112,20 +122,58 @@ int main() {
                     fflush(stdout);
                     break;
                 }
+                case 0xE0: {
+                    ch = _getch();
+                    switch (ch) {
+                        case UP_ARROW: {
+                            //printf("\n");
+                            // printf("---------History---------\n");
+                            // for(int i = 0; i < historyCount; i++ ) {
+                            //     printf("%s - ", history[i]);
+                            // }
+                            // printf("\n");
+                            // printf("---------History---------\n");
+                            if(historyCount > 0) {
+                                memset(input, '\0', sizeof(input));
+                                strcpy(input, history[historyIndex]);
+                                printf("\r\033[K~ %s", history[historyIndex]);
+                                historyIndex = (historyIndex + 1) % historyCount;
+                                index = strlen(input);
+                                fflush(stdout);
+                            } 
+                            break;
+                        }
+                        case DOWN_ARROW: {
+                            if(historyCount > 0) {
+                                memset(input, '\0', sizeof(input));
+                                strcpy(input, history[historyIndex]);
+                                printf("\r\033[K~ %s", history[historyIndex]);
+                                historyIndex = historyIndex > 0 ? historyIndex - 1 : historyCount - 1;
+                                index = strlen(input);
+                                fflush(stdout);
+                            } 
+                            break;
+                        }   
+                        case RIGHT_ARROW: {
+                            printf("\033[C");
+                            fflush(stdout);
+                            break;
+                        }
+                        case LEFT_ARROW: {
+                            printf("\b");
+                            fflush(stdout);
+                            break;
+                        }
+                        default: break;
+                    }
+                    break;
+                }
                 case 0x03: { // CTRL + C
                     exitShell();
                     break;
                 } 
-                case 0x4D: { // ->
-                    printf("\033[C");
-                    break;
-                } 
-                case 0x4B: { // <-
-                    printf("\b");
-                    break;
-                }
                 default: {
-                    if(ch > 0x20 && ch < 0x7E && ch != 0x48 && ch != 0x50) {
+                    if(ch > 0x20 && ch < 0x7E) {
                         printf("\033[%d;%dH", getCursorY(), index == 0 ? 3 : index + 3);
                         input[index++] = ch;
                         input[index] = '\0';
@@ -154,7 +202,7 @@ int main() {
 
             args[argc] = NULL;
 
-            char *lowerCaseCommand = malloc(sizeof(inputCommand));
+            char *lowerCaseCommand = malloc(strlen(inputCommand));
             for(int i = 0; inputCommand[i] != '\0'; i++) {
                 lowerCaseCommand[i] = tolower(inputCommand[i]);
             }
