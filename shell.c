@@ -89,8 +89,33 @@ int main() {
             switch (ch) {
                 case ENTER_KEY: {
                     if (index > 0) {
+                        int notRepeated = 1;
                         input[index] = '\0';
+                        if (historyCount > 0) {
+                            for(int i = 0; i < historyCount; i++) {
+                                if (strcmp(input, history[i]) == 0) {
+                                    free(history[i]);
+                                    for(int j = i; j < historyCount - 1; j++) {
+                                        printf("\n");
+                                        printf("%s <- %s\n", history[j], history[j+1]);
+                                        history[j] = strdup(history[j + 1]);
+                                    }
+                                    historyCount--;
+                                    break;
+                                }
+                            }
+                        }
                         history[historyCount++] = strdup(input);
+                        // printf("\n");
+                        // printf("---------History---------\n");
+                        // printf("Next Command on History: %s\n", input);
+                        // printf("Last Position: %s\n", history[historyCount - 1]);
+                        // printf("History Count: %d\n", historyCount);
+                        // for(int i = 0; i < historyCount; i++ ) {
+                        //     printf("%s - ", history[i]);
+                        // }
+                        // printf("\n");
+                        // printf("---------History---------\n");
                     }
                     printf("\n");
                     gettingInput = 0;
@@ -126,17 +151,10 @@ int main() {
                     ch = _getch();
                     switch (ch) {
                         case UP_ARROW: {
-                            //printf("\n");
-                            // printf("---------History---------\n");
-                            // for(int i = 0; i < historyCount; i++ ) {
-                            //     printf("%s - ", history[i]);
-                            // }
-                            // printf("\n");
-                            // printf("---------History---------\n");
                             if(historyCount > 0) {
                                 memset(input, '\0', sizeof(input));
-                                strcpy(input, history[historyIndex]);
-                                printf("\r\033[K~ %s", history[historyIndex]);
+                                strcpy(input, history[historyCount - 1 - historyIndex]);
+                                printf("\r\033[K~ %s", history[historyCount - 1 - historyIndex]);
                                 historyIndex = (historyIndex + 1) % historyCount;
                                 index = strlen(input);
                                 fflush(stdout);
@@ -146,8 +164,8 @@ int main() {
                         case DOWN_ARROW: {
                             if(historyCount > 0) {
                                 memset(input, '\0', sizeof(input));
-                                strcpy(input, history[historyIndex]);
-                                printf("\r\033[K~ %s", history[historyIndex]);
+                                strcpy(input, history[historyCount - 1 - historyIndex]);
+                                printf("\r\033[K~ %s", history[historyCount - 1 - historyIndex]);
                                 historyIndex = historyIndex > 0 ? historyIndex - 1 : historyCount - 1;
                                 index = strlen(input);
                                 fflush(stdout);
