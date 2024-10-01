@@ -127,7 +127,7 @@ int main() {
                                 }
                             }
                             strcat(input, match);
-                            printf("\r~ %s", input);
+                            printf("\r%s%s", SHELL_PREFIX, input);
                             index = strlen(input);  
                             fflush(stdout);
                         }
@@ -138,10 +138,10 @@ int main() {
                     historyIndex = 0;
                     if(index > 0) {
                         input[--index] = '\0';
-                        printf("\r~ %s ", input);
-                        printf("\b");
-                        fflush(stdout);
-                    }
+                        printf("\r%s%s ", SHELL_PREFIX, input);
+                    } 
+                    printf("\b");
+                    fflush(stdout);
                     break;
                 }
                 case SPACEBAR: {
@@ -160,7 +160,7 @@ int main() {
                             if(historyCount > 0) {
                                 memset(input, '\0', strlen(input));
                                 strcpy(input, history[historyCount - 1 - historyIndex]);
-                                printf("\r\033[K~ %s", history[historyCount - 1 - historyIndex]);
+                                printf("\r\033[K%s%s", SHELL_PREFIX, history[historyCount - 1 - historyIndex]);
                                 historyIndex = (historyIndex + 1) % historyCount;
                                 index = strlen(input);
                                 fflush(stdout);
@@ -171,7 +171,7 @@ int main() {
                             if(historyCount > 0) {
                                 memset(input, '\0', strlen(input));
                                 strcpy(input, history[historyCount - 1 - historyIndex]);
-                                printf("\r\033[K~ %s", history[historyCount - 1 - historyIndex]);
+                                printf("\r\033[K%s%s", SHELL_PREFIX, history[historyCount - 1 - historyIndex]);
                                 historyIndex = historyIndex > 0 ? historyIndex - 1 : historyCount - 1;
                                 index = strlen(input);
                                 fflush(stdout);

@@ -38,9 +38,12 @@ void ls(char *inputCommand, char **args, int *argc);
 void cd(char *inputCommand, char **args, int *argc);
 void clear(char*, char**, int*);
 void exitShell(char*, char**, int*);
+void touch(char *inputCommand, char **args, int *argc);
+void makedir(char *inputCommand, char **args, int *argc);
 int getCursorY();
-int getFilesCount(char* path);
-int *getFilesLen(char* path, int fileCount);
+int getFilesCount(char *path);
+int hasAlphanumeric(char *arg);
+int *getFilesLen(char *path, int fileCount);
 void printHistory(char **history, int *historyCount);
 char username[UNLEN + 1];
 DWORD username_len = sizeof(username);
@@ -50,7 +53,9 @@ Command commands[] = {
     { "ls", ls },
     { "cd", cd },
     { "clear", clear },
-    { "exit", exitShell }
+    { "exit", exitShell },
+    { "touch", touch },
+    { "mkdir", makedir }
 };
 
 const int commandCount = sizeof(commands) / sizeof(Command);

@@ -11,7 +11,7 @@ int getCursorY() {
     }
 }
 
-int getFilesCount(char* path) {
+int getFilesCount(char *path) {
     int fileCount  = 0;
     WIN32_FIND_DATA fileData;
     HANDLE hFind;
@@ -44,7 +44,7 @@ int *getFilesLen(char *path, const int fileCount) {
     return filesLen;
 }
 
-void printHistory(char** history, int *historyCount) {
+void printHistory(char **history, int *historyCount) {
     printf("\n");
     printf("---------History---------\n");
     printf("Last Position: %s\n", history[*historyCount - 1]);
@@ -56,7 +56,7 @@ void printHistory(char** history, int *historyCount) {
     printf("---------History---------\n");
 }
 
-void echo(char *inputCommand, char **args, int* argc) {
+void echo(char *inputCommand, char **args, int *argc) {
     int outputLen = 0;
 
     for (int i = 0; i < *argc; i++) {
@@ -88,7 +88,7 @@ void echo(char *inputCommand, char **args, int* argc) {
     return;
 }
 
-void ls (char *inputCommand, char **args, int* argc) {
+void ls (char *inputCommand, char **args, int *argc) {
     WIN32_FIND_DATA findFileData;
     HANDLE hFind;
     char cwd[MAX_PATH];
@@ -118,11 +118,57 @@ void ls (char *inputCommand, char **args, int* argc) {
     return;
 }
 
+int hasAlphanumeric(char *arg) {
+    int alphanumericCharCount = 0;
+    for (int i = 0; i < strlen(arg); i++) {
+        alphanumericCharCount += isalnum(arg[i]);
+    }
+    return alphanumericCharCount > 0;
+}
+
+void touch(char *inputCommand, char **args, int* argc) {
+    if (*argc > 1) {
+        if (hasAlphanumeric(args[1])) {
+            FILE *file = fopen(args[1], "w");
+            if (file == NULL) {
+                printf("Error creating file.\n");
+            }
+            fclose(file);
+            printf("File '%s' created successfully\n", args[1]);
+        } else {
+            printf("Invalid file name.\n");
+        }
+        return;
+    }
+    printf("Insufficient arguments.\n");
+    return;
+}
+
+void makedir(char *inputCommand, char **args, int* argc) {
+    if (*argc > 1) {
+        if (hasAlphanumeric(args[1])) {
+            if (CreateDirectory(args[1], NULL)) {
+                printf("Directory '%s' created successfully\n", args[1]);
+            } else {
+                if(GetLastError() == ERROR_ALREADY_EXISTS) {
+                    printf("Directory already exists.\n");
+                }
+            }
+            return;
+        } else {
+            printf("Invalid folder name.\n");
+        }
+        return;
+    }
+    printf("Insufficient arguments.\n");
+    return;
+}
+
 void cd(char *inputCommand, char **args, int* argc) {
     if(*argc < 2) {
         return;
     }
-
+    
     if(_chdir(args[1]) != 0) {
         printf("Invalid directory.\n");
     }
@@ -130,11 +176,11 @@ void cd(char *inputCommand, char **args, int* argc) {
     return;
 }
 
-void clear(char* _, char**__, int*___) {
+void clear(char *_, char**__, int *___) {
     system("cls");
     return;
 }
 
-void exitShell(char*_, char**__, int*___) {
+void exitShell(char *_, char **__, int *___) {
     exit(0);
 }
