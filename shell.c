@@ -130,6 +130,9 @@ int main() {
                             printf("\r%s%s", SHELL_PREFIX, input);
                             index = strlen(input);  
                             fflush(stdout);
+                            free(matches);
+                            free(files);
+                            free(match);
                         }
                     }
                     break;
