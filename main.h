@@ -40,9 +40,11 @@ void clear(char*, char**, int*);
 void exitShell(char*, char**, int*);
 void touch(char *inputCommand, char **args, int *argc);
 void makedir(char *inputCommand, char **args, int *argc);
+void rm(char *inputCommand, char **args, int *argc);
 int getCursorY();
 int getFilesCount(char *path);
 int hasAlphanumeric(char *arg);
+char *trim(char* str);
 int *getFilesLen(char *path, int fileCount);
 void printHistory(char **history, int *historyCount);
 char username[UNLEN + 1];
@@ -55,7 +57,8 @@ Command commands[] = {
     { "clear", clear },
     { "exit", exitShell },
     { "touch", touch },
-    { "mkdir", makedir }
+    { "mkdir", makedir },
+    { "rm", rm }
 };
 
 const int commandCount = sizeof(commands) / sizeof(Command);

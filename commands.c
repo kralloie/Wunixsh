@@ -56,6 +56,16 @@ void printHistory(char **history, int *historyCount) {
     printf("---------History---------\n");
 }
 
+int hasAlphanumeric(char *arg) {
+    int alphanumericCharCount = 0;
+    for (int i = 0; i < strlen(arg); i++) {
+        alphanumericCharCount += isalnum(arg[i]);
+    }
+    return alphanumericCharCount > 0;
+}
+
+// --------- Commands ---------
+
 void echo(char *inputCommand, char **args, int *argc) {
     int outputLen = 0;
 
@@ -109,21 +119,19 @@ void ls (char *inputCommand, char **args, int *argc) {
     }
 
     do {
+        int isDir = findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-        SetConsoleTextAttribute(hConsole, (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? 10 : 7);
-        printf("%s%c\n", findFileData.cFileName, (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? '/' : ' ');
+        SetConsoleTextAttribute(hConsole, (isDir) ? 10 : 7);
+        if (isDir) {
+            printf("\e[1m%s/\e[m\n", findFileData.cFileName);
+        } else {
+            printf("%s\n", findFileData.cFileName);
+        }
+
     } while (FindNextFile(hFind, &findFileData) != 0);
 
     FindClose(hFind);
     return;
-}
-
-int hasAlphanumeric(char *arg) {
-    int alphanumericCharCount = 0;
-    for (int i = 0; i < strlen(arg); i++) {
-        alphanumericCharCount += isalnum(arg[i]);
-    }
-    return alphanumericCharCount > 0;
 }
 
 void touch(char *inputCommand, char **args, int* argc) {
@@ -164,6 +172,25 @@ void makedir(char *inputCommand, char **args, int* argc) {
     return;
 }
 
+void rm(char *inputCommand, char **args, int* argc) {
+    if (*argc > 1) {
+        DWORD attributes = GetFileAttributes(args[1]);
+        if (attributes == INVALID_FILE_ATTRIBUTES) {
+            printf("Invalid name specified.\n");
+            return;
+        }
+
+        if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
+            RemoveDirectory(args[1]);
+        } else {
+            DeleteFile(args[1]);
+        }
+        return;
+    }
+    printf("Please, specify a file/directory name to remove.\n");
+    return;
+}
+
 void cd(char *inputCommand, char **args, int* argc) {
     if(*argc < 2) {
         return;
@@ -184,3 +211,5 @@ void clear(char *_, char**__, int *___) {
 void exitShell(char *_, char **__, int *___) {
     exit(0);
 }
+
+// --------- Commands ---------

@@ -62,7 +62,8 @@ int main() {
                             char *tokens[MAX_ARGS];
                             int tokenCount = 0;
                             char *token;
-                            token = strtok(input, " \n");
+                            char *inputCopy = strdup(input);
+                            token = strtok(inputCopy, " \n");
                             while (token != NULL) {
                                 tokens[tokenCount++] = strdup(token);
                                 token = strtok(NULL, " \n");
@@ -126,10 +127,12 @@ int main() {
                                     strcat(input, " ");
                                 }
                             }
+
                             strcat(input, match);
                             printf("\r%s%s", SHELL_PREFIX, input);
                             index = strlen(input);  
                             fflush(stdout);
+                            
                             free(matches);
                             free(files);
                             free(match);
