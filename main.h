@@ -1,17 +1,6 @@
-#pragma once
-#include <windows.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <conio.h>
-#include <string.h>
-#include <direct.h>
-#include <limits.h>
-#include <lmcons.h>
-#include <ctype.h>
-#include <signal.h>
 #include "commands.c"
 
-#define SHELL_PREFIX "~ "
+#define SHELL_PREFIX "$ "
 #define MAX_INPUT 1024
 #define MAX_ARGS 100
 #define RUNNING 1
@@ -42,9 +31,9 @@ void touch(char *inputCommand, char **args, int *argc);
 void makedir(char *inputCommand, char **args, int *argc);
 void rm(char *inputCommand, char **args, int *argc);
 int getCursorY();
+int getCursorX();
 int getFilesCount(char *path);
 int hasAlphanumeric(char *arg);
-char *trim(char* str);
 int *getFilesLen(char *path, int fileCount);
 void printHistory(char **history, int *historyCount);
 char username[UNLEN + 1];

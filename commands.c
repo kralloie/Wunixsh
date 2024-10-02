@@ -1,4 +1,14 @@
 #pragma once
+#include <windows.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <string.h>
+#include <direct.h>
+#include <limits.h>
+#include <lmcons.h>
+#include <ctype.h>
+#include <signal.h>
 
 int getCursorY() {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);;
@@ -6,6 +16,17 @@ int getCursorY() {
 
     if(GetConsoleScreenBufferInfo(hConsole, &csbi)) {
         return csbi.dwCursorPosition.Y + 1;
+    } else {
+        return 0;
+    }
+}
+
+int getCursorX() {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+    if(GetConsoleScreenBufferInfo(hConsole, &csbi)) {
+        return csbi.dwCursorPosition.X + 1;
     } else {
         return 0;
     }

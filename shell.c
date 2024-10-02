@@ -54,7 +54,7 @@ int main() {
                     break;
                 }
                 case TAB_KEY: {
-                    if (index > 0) {
+                    if (index > 0 && !getCursorX() - 3 < index) {
                         char path[MAX_PATH];
                         snprintf(path, sizeof(path), "%s\\*", cwd);
                         int fileCount = getFilesCount(path);
@@ -185,8 +185,10 @@ int main() {
                             break;
                         }   
                         case RIGHT_ARROW: {
-                            printf("\033[C");
-                            fflush(stdout);
+                            if(getCursorX() - 3 < index) {
+                                printf("\033[C");
+                                fflush(stdout);
+                            }
                             break;
                         }
                         case LEFT_ARROW: {
@@ -204,10 +206,24 @@ int main() {
                 } 
                 default: {
                     if(ch > 0x20 && ch < 0x7E) {
+                        int cursorX = getCursorX() - 3;
+                        printf("\033[C");
+                        printf("\033[s");
                         printf("\033[%d;%dH", getCursorY(), index == 0 ? 3 : index + 3);
-                        input[index++] = ch;
-                        input[index] = '\0';
-                        printf("%c", ch);
+                        if(cursorX < index && index > 0) {
+                            for(int i = index; i > cursorX; --i) {
+                                input[i] = input[i - 1];
+                            }
+                            input[cursorX] = ch;
+                            input[++index] = '\0';
+                            printf("\r\033[K%s%s", SHELL_PREFIX, input);
+                            printf("\033[u");
+                        } else {
+                            input[index++] = ch;
+                            input[index] = '\0';
+                            printf("%c", ch);    
+                        }
+
                         fflush(stdout);
                     }
                 }
