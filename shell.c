@@ -17,13 +17,7 @@ int main() {
             printf("Unexpected Error!");
         }
 
-        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_BLUE);
-        printf("\033[1m[%s - %02d:%02d:%02d] - \033[0m", username, time.wHour, time.wMinute, time.wSecond);
-        SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_BLUE);
-        printf("\033[1m%s\033[0m\n", cwd);
-        SetConsoleTextAttribute(hConsole, 7);
-        printf("%s", SHELL_PREFIX);
-        fflush(stdout);
+        prompt(hConsole, time, cwd, SHELL_PREFIX, username);
 
         char input[MAX_INPUT];
         unsigned char ch;
@@ -73,8 +67,9 @@ int main() {
                             int *fileLengths = getFilesLen(path, fileCount);
                             char **files = malloc(fileCount * sizeof(char*));
                             for(int i = 0; i < fileCount; i++) {    
-                                files[i] = malloc(fileLengths[i] * sizeof(char));
+                                files[i] = malloc(fileLengths[i] * sizeof(char) + 1);
                             }
+
                             WIN32_FIND_DATA findFileData;
                             HANDLE hFind;
                             hFind = FindFirstFile(path, &findFileData);
@@ -82,13 +77,13 @@ int main() {
                                 strcpy(files[fileIndex++], findFileData.cFileName);
                             } while(FindNextFile(hFind, &findFileData) != 0);
                             FindClose(hFind);
+
                             int matchCount = 0;
                             for(int i = 0; i < fileCount; i++) {
                                 if(strncmp(files[i], lastToken, strlen(lastToken)) == 0) {
                                     matchCount++;
                                 }
                             }
-                            
                             if(matchCount == 0) {
                                 break;
                             }
@@ -98,21 +93,24 @@ int main() {
                             int maxLen = 0;
                             for(int i = 0; i < fileCount; i++) {
                                 if(strncmp(files[i], lastToken, strlen(lastToken)) == 0) {
-                                    maxLen = (strlen(files[i]) > maxLen) ? strlen(files[i]) : maxLen;
-                                    matches[matchIndex] = malloc(strlen(files[i]) * sizeof(char));
+                                    int fileNameLength = strlen(files[i]);
+                                    maxLen = (fileNameLength > maxLen) ? fileNameLength : maxLen;
+                                    matches[matchIndex] = malloc(fileNameLength * sizeof(char) + 1);
                                     strcpy(matches[matchIndex++], files[i]);
                                 }
                             }
-                            char *match = malloc(maxLen + 1);
-                            memset(match, '\0', maxLen + 1);
+
+                            char *match = calloc(maxLen + 1, sizeof(char));
                             match[0] = lastToken[0];
                             for(int i = 1; i < maxLen; i++) {
                                 for(int j = 0; j < matchCount; j++) {
                                     char nextMatchChar = matches[j][i];
                                     int charMatchCount = 0;
                                     for(int k = 0; k < matchCount; k++) {
-                                        if (matches[k][i] == nextMatchChar) {
-                                            charMatchCount++;
+                                        if(strlen(matches[k]) >= i) {
+                                            if (matches[k][i] == nextMatchChar) {
+                                                charMatchCount++;
+                                            }
                                         }
                                     }
                                     if (charMatchCount == matchCount) {
@@ -120,6 +118,7 @@ int main() {
                                     }
                                 }
                             }
+
                             input[0] = '\0';
                             if(tokenCount > 1) {
                                 for (int i = 0; i < tokenCount - 1; i++) {
@@ -133,6 +132,7 @@ int main() {
                             index = strlen(input);  
                             fflush(stdout);
                             
+                            free(fileLengths);
                             free(matches);
                             free(files);
                             free(match);
@@ -143,10 +143,20 @@ int main() {
                 case BACKSPACE: {
                     historyIndex = 0;
                     if(index > 0) {
+                        printf("\033[s");
+                        int cursorX = getCursorX() - 3;
+                        if(cursorX < index) {
+                            for(int i = cursorX - 1; i < index - 1; i++) {
+                                input[i] = input[i + 1];
+                            }
+                        }
                         input[--index] = '\0';
-                        printf("\r%s%s ", SHELL_PREFIX, input);
+                        printf("\r\033[K%s%s", SHELL_PREFIX, input);
+                        printf("\033[u");
                     } 
-                    printf("\b");
+                    if(getCursorX() > 3) {
+                        printf("\b");
+                    } 
                     fflush(stdout);
                     break;
                 }
@@ -164,7 +174,6 @@ int main() {
                     switch (ch) {
                         case UP_ARROW: {
                             if(historyCount > 0) {
-                                memset(input, '\0', strlen(input));
                                 strcpy(input, history[historyCount - 1 - historyIndex]);
                                 printf("\r\033[K%s%s", SHELL_PREFIX, history[historyCount - 1 - historyIndex]);
                                 historyIndex = (historyIndex + 1) % historyCount;
@@ -175,7 +184,6 @@ int main() {
                         }
                         case DOWN_ARROW: {
                             if(historyCount > 0) {
-                                memset(input, '\0', strlen(input));
                                 strcpy(input, history[historyCount - 1 - historyIndex]);
                                 printf("\r\033[K%s%s", SHELL_PREFIX, history[historyCount - 1 - historyIndex]);
                                 historyIndex = historyIndex > 0 ? historyIndex - 1 : historyCount - 1;
@@ -192,8 +200,10 @@ int main() {
                             break;
                         }
                         case LEFT_ARROW: {
-                            printf("\b");
-                            fflush(stdout);
+                            if(getCursorX() > 3) {
+                                printf("\b");
+                                fflush(stdout);
+                            } 
                             break;
                         }
                         default: break;
@@ -248,11 +258,10 @@ int main() {
 
             args[argc] = NULL;
 
-            char *lowerCaseCommand = malloc(strlen(inputCommand));
+            char *lowerCaseCommand = calloc(strlen(inputCommand) + 1, sizeof(char));
             for(int i = 0; inputCommand[i] != '\0'; i++) {
                 lowerCaseCommand[i] = tolower(inputCommand[i]);
             }
-            lowerCaseCommand[strlen(inputCommand)] = '\0';   
 
             for (int i = 0; i < commandCount; i++) {
                 if(strcmp(commands[i].name, lowerCaseCommand) == 0) {

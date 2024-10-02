@@ -10,6 +10,16 @@
 #include <ctype.h>
 #include <signal.h>
 
+void prompt(HANDLE hConsole, SYSTEMTIME time, char *cwd, char *prefix, char *username) {
+    SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_BLUE);
+    printf("\033[1m[%s - %02d:%02d:%02d] - \033[0m", username, time.wHour, time.wMinute, time.wSecond);
+    SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_BLUE);
+    printf("\033[1m%s\033[0m\n", cwd);
+    SetConsoleTextAttribute(hConsole, 7);
+    printf("%s", prefix);
+    fflush(stdout);
+}
+
 int getCursorY() {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);;
     CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -59,7 +69,7 @@ int *getFilesLen(char *path, const int fileCount) {
     }
 
     do {
-        filesLen[index++] = strlen(fileData.cFileName) + 1;
+        filesLen[index++] = strlen(fileData.cFileName);
     } while(FindNextFile(hFind, &fileData) != 0);
     FindClose(hFind);
     return filesLen;
@@ -94,7 +104,7 @@ void echo(char *inputCommand, char **args, int *argc) {
         outputLen += strlen(args[i]) + 1;
     }
 
-    char *output = malloc(outputLen * sizeof(char));
+    char *output = malloc(outputLen * sizeof(char) + 1);
 
     if (output == NULL) {
         return;
@@ -107,10 +117,6 @@ void echo(char *inputCommand, char **args, int *argc) {
             strcat(output, args[i]);
             strcat(output, " ");
         }
-    }
-
-    if (strlen(output) > 0) {
-        output[strlen(output) - 1] = '\0';
     }
 
     printf("%s\n", output);
