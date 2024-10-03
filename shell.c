@@ -64,20 +64,7 @@ int main() {
                             }
                             char *lastToken = strdup(tokens[tokenCount - 1]);
                             int fileIndex = 0;
-                            int *fileLengths = getFilesLen(path, fileCount);
-                            char **files = malloc(fileCount * sizeof(char*));
-                            for(int i = 0; i < fileCount; i++) {    
-                                files[i] = malloc(fileLengths[i] * sizeof(char) + 1);
-                            }
-
-                            WIN32_FIND_DATA findFileData;
-                            HANDLE hFind;
-                            hFind = FindFirstFile(path, &findFileData);
-                            do {
-                                strcpy(files[fileIndex++], findFileData.cFileName);
-                            } while(FindNextFile(hFind, &findFileData) != 0);
-                            FindClose(hFind);
-
+                            char **files = getFileNames(path);
                             int matchCount = 0;
                             for(int i = 0; i < fileCount; i++) {
                                 if(strncmp(files[i], lastToken, strlen(lastToken)) == 0) {
@@ -132,7 +119,6 @@ int main() {
                             index = strlen(input);  
                             fflush(stdout);
                             
-                            free(fileLengths);
                             free(matches);
                             free(files);
                             free(match);

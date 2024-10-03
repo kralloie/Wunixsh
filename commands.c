@@ -21,21 +21,24 @@ void prompt(HANDLE hConsole, SYSTEMTIME time, char *cwd, char *prefix, char *use
 }
 
 int getCursorY() {
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);;
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-
-    if(GetConsoleScreenBufferInfo(hConsole, &csbi)) {
+    if(GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
         return csbi.dwCursorPosition.Y + 1;
     } else {
         return 0;
     }
 }
 
-int getCursorX() {
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);;
+int getTerminalLength() {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
+        return csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    }
+}
 
-    if(GetConsoleScreenBufferInfo(hConsole, &csbi)) {
+int getCursorX() {
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if(GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
         return csbi.dwCursorPosition.X + 1;
     } else {
         return 0;
@@ -50,7 +53,6 @@ int getFilesCount(char *path) {
     if (hFind == INVALID_HANDLE_VALUE) {
         return 0;
     }
-
     do {
         fileCount++;
     } while(FindNextFile(hFind, &fileData) != 0);
@@ -73,6 +75,27 @@ int *getFilesLen(char *path, const int fileCount) {
     } while(FindNextFile(hFind, &fileData) != 0);
     FindClose(hFind);
     return filesLen;
+}
+
+char **getFileNames(char* path) {
+    int fileCount = getFilesCount(path);
+    if (fileCount > 0) {
+        int *fileLengths = getFilesLen(path, fileCount);
+        char **fileNames = malloc(fileCount * sizeof(char*));
+        for (int i = 0; i < fileCount; i++) {
+            fileNames[i] = calloc(fileLengths[i] + 1, sizeof(char));
+        }
+        int fileIndex = 0;
+        WIN32_FIND_DATA fileData;
+        HANDLE hFind;
+        hFind = FindFirstFile(path, &fileData);
+        do {
+            strcpy(fileNames[fileIndex++], fileData.cFileName);
+        } while(FindNextFile(hFind, &fileData) != 0);
+        FindClose(hFind);
+        return fileNames;
+    }
+    return NULL;
 }
 
 void printHistory(char **history, int *historyCount) {
@@ -111,7 +134,6 @@ void echo(char *inputCommand, char **args, int *argc) {
     }
 
     output[0] = '\0';
-
     for (int i = 0; i < *argc; i++) {
         if (strcmp(args[i], inputCommand) != 0) {
             strcat(output, args[i]);
@@ -126,7 +148,7 @@ void echo(char *inputCommand, char **args, int *argc) {
 }
 
 void ls (char *inputCommand, char **args, int *argc) {
-    WIN32_FIND_DATA findFileData;
+    WIN32_FIND_DATA fileData;
     HANDLE hFind;
     char cwd[MAX_PATH];
 
@@ -138,26 +160,57 @@ void ls (char *inputCommand, char **args, int *argc) {
 
     snprintf(searchPattern, sizeof(searchPattern), "%s\\*", (*argc > 1) ? args[1] : cwd);
 
-    hFind = FindFirstFile(searchPattern, &findFileData);
+    hFind = FindFirstFile(searchPattern, &fileData);
 
     if (hFind == INVALID_HANDLE_VALUE) {
         printf("No files in this directory.\n");
         return;
     }
 
+    int fileCount = getFilesCount(searchPattern);
+    int fileMaxLen = 0;
+    int fileTotalLen = 0;
+    char** fileNames = getFileNames(searchPattern);
+
+    for(int i = 0; i < fileCount; i++) {
+        fileMaxLen = strlen(fileNames[i]) > fileMaxLen ? strlen(fileNames[i]) : fileMaxLen;
+        fileTotalLen += strlen(fileNames[i]);
+    }
+
+    int terminalLen = getTerminalLength();
+    int columns = terminalLen / fileMaxLen;
+    int columnCounter = 0;
+    const int space = 1;
     do {
-        int isDir = findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+        int isDir = fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
         SetConsoleTextAttribute(hConsole, (isDir) ? 10 : 7);
+        int dirOffset = (isDir) ? 1 : 0;
         if (isDir) {
-            printf("\e[1m%s/\e[m\n", findFileData.cFileName);
+            printf("\e[1m%s/\e[m", fileData.cFileName);
         } else {
-            printf("%s\n", findFileData.cFileName);
+            printf("%s", fileData.cFileName);
         }
 
-    } while (FindNextFile(hFind, &findFileData) != 0);
+        if(terminalLen < fileTotalLen) {
+            if(columnCounter < columns - 1) {
+                for(int i = 0; i < fileMaxLen - strlen(fileData.cFileName) + space - dirOffset; i++) {
+                    printf(" ");
+                }
+            }
+            columnCounter++;
+            if (columnCounter >= columns) {
+                columnCounter = 0;
+                printf("\n");
+            } 
+        } else { 
+            printf("  ");
+        }
 
+    } while (FindNextFile(hFind, &fileData) != 0);
+    
     FindClose(hFind);
+    printf("\n");
     return;
 }
 
