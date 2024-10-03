@@ -206,11 +206,15 @@ void rm(char *inputCommand, char **args, int* argc) {
             printf("Invalid name specified.\n");
             return;
         }
-
-        if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
-            RemoveDirectory(args[1]);
-        } else {
-            DeleteFile(args[1]);
+        printf("\nAre you sure? (y/n): ");
+        char confirmation = _getch();
+        printf("\rAre you sure? (y/n): %c", confirmation);
+        if(tolower(confirmation) == 'y') {
+            if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
+                RemoveDirectory(args[1]);
+            } else {
+                DeleteFile(args[1]);
+            }
         }
         return;
     }
