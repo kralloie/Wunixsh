@@ -173,14 +173,14 @@ void ls (char *inputCommand, char **args, int *argc) {
     char** fileNames = getFileNames(searchPattern);
 
     for(int i = 0; i < fileCount; i++) {
-        fileMaxLen = strlen(fileNames[i]) > fileMaxLen ? strlen(fileNames[i]) : fileMaxLen;
+        fileMaxLen = strlen(fileNames[i]) > fileMaxLen ? strlen(fileNames[i]) + 1 : fileMaxLen;
         fileTotalLen += strlen(fileNames[i]);
     }
 
     int terminalLen = getTerminalLength();
     int columns = terminalLen / fileMaxLen;
     int columnCounter = 0;
-    const int space = 1;
+    const int space = 3;
     do {
         int isDir = fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -193,13 +193,13 @@ void ls (char *inputCommand, char **args, int *argc) {
         }
 
         if(terminalLen < fileTotalLen) {
+            columnCounter++;
             if(columnCounter < columns - 1) {
                 for(int i = 0; i < fileMaxLen - strlen(fileData.cFileName) + space - dirOffset; i++) {
                     printf(" ");
                 }
             }
-            columnCounter++;
-            if (columnCounter >= columns) {
+            if (columnCounter >= columns - 1) {
                 columnCounter = 0;
                 printf("\n");
             } 
