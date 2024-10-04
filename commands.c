@@ -77,7 +77,7 @@ int *getFilesLen(char *path, const int fileCount) {
     }
 
     do {
-        filesLen[index++] = strlen(fileData.cFileName);
+        filesLen[index++] = strlen(fileData.cFileName) + (fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? 1 : 0);
     } while(FindNextFile(hFind, &fileData) != 0);
     FindClose(hFind);
     return filesLen;
@@ -96,7 +96,11 @@ char **getFileNames(char* path) {
         HANDLE hFind;
         hFind = FindFirstFile(path, &fileData);
         do {
-            strcpy(fileNames[fileIndex++], fileData.cFileName);
+            char* fileName = fileData.cFileName;
+            if (fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                strcat(fileName, "/");
+            }
+            strcpy(fileNames[fileIndex++], fileName);
         } while(FindNextFile(hFind, &fileData) != 0);
         FindClose(hFind);
         return fileNames;
@@ -213,7 +217,7 @@ void ls (char *inputCommand, char **args, int *argc) {
 
     char searchPattern[MAX_PATH];
 
-    snprintf(searchPattern, sizeof(searchPattern), "%s\\*", (*argc > 1) ? args[1] : cwd);
+    snprintf(searchPattern, sizeof(searchPattern), "%s/*", (*argc > 1) ? args[1] : cwd);
 
     hFind = FindFirstFile(searchPattern, &fileData);
 

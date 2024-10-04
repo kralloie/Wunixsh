@@ -49,20 +49,41 @@ int main() {
                 }
                 case TAB_KEY: {
                     if (index > 0 && !getCursorX() - 3 < index) {
+                        int isPath = 0;
+
+                        char *tokens[MAX_ARGS];
+                        int tokenCount = 0;
+                        char *token;
+                        char *inputCopy = strdup(input);
+                        token = strtok(inputCopy, " \n");
+                        while (token != NULL) {
+                            tokens[tokenCount++] = strdup(token);
+                            token = strtok(NULL, " \n");
+                        }
+
+                        char *lastToken = strdup(tokens[tokenCount - 1]);
+                        if(lastToken == NULL) {
+                            lastToken = strdup(input);
+                        }
+
                         char path[MAX_PATH];
-                        snprintf(path, sizeof(path), "%s\\*", cwd);
+                        snprintf(path, sizeof(path), "%s\\", cwd);
+                        char* lastTokenCopy = strdup(lastToken);
+                        if(strchr(lastToken, '/') != NULL) {
+                            isPath = 1;
+                            snprintf(path, sizeof(path), "%s\\%s*", cwd, lastToken);
+                            char* newToken = strtok(lastToken, "/");
+                            while (newToken != NULL) {
+                                strcpy(lastToken, newToken);
+                                newToken = strtok(NULL , "/");
+                            }
+                        } else {
+                            strcat(path, "*");
+                        }
+                        lastTokenCopy[strlen(lastTokenCopy) - strlen(lastToken)] = '\0';
+                        
                         int fileCount = getFilesCount(path);
                         if (fileCount > 0) {
-                            char *tokens[MAX_ARGS];
-                            int tokenCount = 0;
-                            char *token;
-                            char *inputCopy = strdup(input);
-                            token = strtok(inputCopy, " \n");
-                            while (token != NULL) {
-                                tokens[tokenCount++] = strdup(token);
-                                token = strtok(NULL, " \n");
-                            }
-                            char *lastToken = strdup(tokens[tokenCount - 1]);
                             int fileIndex = 0;
                             char **files = getFileNames(path);
                             int matchCount = 0;
@@ -113,12 +134,13 @@ int main() {
                                     strcat(input, " ");
                                 }
                             }
-
+                            if (isPath) {
+                                strcat(input, lastTokenCopy);
+                            }
                             strcat(input, match);
                             printf("\r%s%s", SHELL_PREFIX, input);
                             index = strlen(input);  
                             fflush(stdout);
-                            
                             free(matches);
                             free(files);
                             free(match);
