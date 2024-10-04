@@ -10,6 +10,12 @@
 #include <ctype.h>
 #include <signal.h>
 
+const char *compressedExtensions[] = { ".tar", ".zip", ".rar", ".arc", ".gz", ".hqx", ".sit" };
+const size_t compressedExtensionsSz = sizeof(compressedExtensions);
+
+const char *executableExtensions[] = { ".exe", ".bat", ".com", ".cmd", ".msi" };
+const size_t executableExtensionsSz = sizeof(executableExtensions);
+
 void prompt(HANDLE hConsole, SYSTEMTIME time, char *cwd, char *prefix, char *username) {
     SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_BLUE);
     printf("\033[1m[%s - %02d:%02d:%02d] - \033[0m", username, time.wHour, time.wMinute, time.wSecond);
@@ -98,6 +104,55 @@ char **getFileNames(char* path) {
     return NULL;
 }
 
+int checkExtension(char* fileName, const char *extensions[], const size_t *extSz) {
+    int extIndex = *extSz / sizeof(extensions[0]);
+    if(strlen(fileName) > strlen(extensions[0])) {
+        for(int i = 0; i < extIndex; i++) {
+            if(strcmp(fileName + (strlen(fileName) - strlen(extensions[i])), extensions[i]) == 0) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+int printFileName(WIN32_FIND_DATA *fileData) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD attributes = fileData->dwFileAttributes;
+    char* fileName = strdup(fileData->cFileName);
+    if (attributes == INVALID_FILE_ATTRIBUTES) {
+        return 0;
+    }
+
+    if (attributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+        SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_BLUE);
+        printf("\033[1m%s@\033[0m", fileName);
+        return 1;
+    }
+
+    if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
+        SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
+        printf("\033[1m%s/\033[0m", fileName);
+        return 1;
+    }
+
+    if (checkExtension(fileName, executableExtensions, &executableExtensionsSz)) {
+        SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
+        printf("\033[1m%s\033[0m", fileName);
+        return 0;
+    }
+ 
+    if (checkExtension(fileName, compressedExtensions, &compressedExtensionsSz)) {
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
+        printf("%s", fileName);
+        return 0;
+    }
+
+    SetConsoleTextAttribute(hConsole, 7);
+    printf("%s", fileName);
+    return 0;
+}
+
 void printHistory(char **history, int *historyCount) {
     printf("\n");
     printf("---------History---------\n");
@@ -170,7 +225,7 @@ void ls (char *inputCommand, char **args, int *argc) {
     int fileCount = getFilesCount(searchPattern);
     int fileMaxLen = 0;
     int fileTotalLen = 0;
-    char** fileNames = getFileNames(searchPattern);
+    char **fileNames = getFileNames(searchPattern);
 
     for(int i = 0; i < fileCount; i++) {
         fileMaxLen = strlen(fileNames[i]) > fileMaxLen ? strlen(fileNames[i]) + 1 : fileMaxLen;
@@ -182,15 +237,10 @@ void ls (char *inputCommand, char **args, int *argc) {
     int columnCounter = 0;
     const int space = 3;
     do {
-        int isDir = fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        int isDir = fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
         SetConsoleTextAttribute(hConsole, (isDir) ? 10 : 7);
-        int dirOffset = (isDir) ? 1 : 0;
-        if (isDir) {
-            printf("\e[1m%s/\e[m", fileData.cFileName);
-        } else {
-            printf("%s", fileData.cFileName);
-        }
+        int dirOffset = printFileName(&fileData);
 
         if(terminalLen < fileTotalLen) {
             columnCounter++;
