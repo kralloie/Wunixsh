@@ -67,21 +67,20 @@ int main() {
                         }
 
                         char path[MAX_PATH];
-                        snprintf(path, sizeof(path), "%s\\", cwd);
-                        char* lastTokenCopy = strdup(lastToken);
+                        snprintf(path, sizeof(path), "%s/", cwd);
+                        char* pathToken = strdup(lastToken);
                         if(strchr(lastToken, '/') != NULL) {
+                            char **pathAndFilename = getPathAndFilename(lastToken);
+                            snprintf(path, sizeof(path), "%s/%s*", cwd, lastToken);
                             isPath = 1;
-                            snprintf(path, sizeof(path), "%s\\%s*", cwd, lastToken);
-                            char* newToken = strtok(lastToken, "/");
-                            while (newToken != NULL) {
-                                strcpy(lastToken, newToken);
-                                newToken = strtok(NULL , "/");
-                            }
+                            strcpy(pathToken, pathAndFilename[0]);
+                            strcpy(lastToken, pathAndFilename[1]);
+                            free(pathAndFilename);
+
                         } else {
                             strcat(path, "*");
                         }
-                        lastTokenCopy[strlen(lastTokenCopy) - strlen(lastToken)] = '\0';
-                        
+
                         int fileCount = getFilesCount(path);
                         if (fileCount > 0) {
                             int fileIndex = 0;
@@ -135,7 +134,7 @@ int main() {
                                 }
                             }
                             if (isPath) {
-                                strcat(input, lastTokenCopy);
+                                strcat(input, pathToken); 
                             }
                             strcat(input, match);
                             printf("\r%s%s", SHELL_PREFIX, input);

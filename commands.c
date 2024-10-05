@@ -83,6 +83,23 @@ int *getFilesLen(char *path, const int fileCount) {
     return filesLen;
 }
 
+char **getPathAndFilename(char* path) {
+    char *pathCopy = strdup(path);
+    char *filePath = strdup(path);
+    char *filename = calloc(strlen(path), sizeof(char));
+    char *token = strtok(pathCopy, "/");
+    while(token != NULL) {
+        strcpy(filename, token);
+        token = strtok(NULL, "/");
+    }
+    filePath[strlen(path) - strlen(filename)] = '\0';
+    char **fileNameAndPath = malloc(2 * sizeof(char*));
+    fileNameAndPath[0] = strdup(filePath);
+    fileNameAndPath[1] = strdup(filename);
+    free(pathCopy);
+    return fileNameAndPath;
+}
+
 char **getFileNames(char* path) {
     int fileCount = getFilesCount(path);
     if (fileCount > 0) {
@@ -333,7 +350,7 @@ void cd(char *inputCommand, char **args, int* argc) {
     if(*argc < 2) {
         return;
     }
-    
+    printf("Path: %s\n", args[1]);
     if(_chdir(args[1]) != 0) {
         printf("Invalid directory.\n");
     }

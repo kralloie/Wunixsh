@@ -34,6 +34,7 @@ int getCursorY();
 int getCursorX();
 int getFilesCount(char *path);
 int *getFilesLen(char *path, int fileCount);
+char **getPathAndFilename(char* path);
 char **getFileNames(char* path);
 int hasAlphanumeric(char *arg);
 void printHistory(char **history, int *historyCount);
