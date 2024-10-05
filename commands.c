@@ -1,4 +1,3 @@
-#pragma once
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,6 +23,14 @@ void prompt(HANDLE hConsole, SYSTEMTIME time, char *cwd, char *prefix, char *use
     SetConsoleTextAttribute(hConsole, 7);
     printf("%s", prefix);
     fflush(stdout);
+}
+
+char *strToLower(char* str, int length) {
+    char* lowercaseStr = calloc(length + 1, sizeof(char));
+    for(int i = 0; i < length; i++) {
+        lowercaseStr[i] = tolower(str[i]);
+    }
+    return lowercaseStr;
 }
 
 int getCursorY() {

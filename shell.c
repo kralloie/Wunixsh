@@ -50,7 +50,6 @@ int main() {
                 case TAB_KEY: {
                     if (index > 0 && !getCursorX() - 3 < index) {
                         int isPath = 0;
-
                         char *tokens[MAX_ARGS];
                         int tokenCount = 0;
                         char *token;
@@ -68,7 +67,7 @@ int main() {
 
                         char path[MAX_PATH];
                         snprintf(path, sizeof(path), "%s/", cwd);
-                        char* pathToken = strdup(lastToken);
+                        char *pathToken = strdup(lastToken);
                         if(strchr(lastToken, '/') != NULL) {
                             char **pathAndFilename = getPathAndFilename(lastToken);
                             if (strchr(lastToken, ':') != NULL) {
@@ -88,12 +87,15 @@ int main() {
                         int fileCount = getFilesCount(path);
                         if (fileCount > 0) {
                             int fileIndex = 0;
+                            char* lowercaseToken = strToLower(lastToken, strlen(lastToken));
                             char **files = getFileNames(path);
                             int matchCount = 0;
                             for(int i = 0; i < fileCount; i++) {
-                                if(strncmp(files[i], lastToken, strlen(lastToken)) == 0) {
+                                char* lowercaseFile = strToLower(files[i], strlen(files[i]));
+                                if(strncmp(lowercaseFile, lowercaseToken, strlen(lowercaseToken)) == 0) {
                                     matchCount++;
                                 }
+                                free(lowercaseFile);
                             }
                             if(matchCount == 0) {
                                 break;
@@ -103,23 +105,26 @@ int main() {
                             int matchIndex = 0;
                             int maxLen = 0;
                             for(int i = 0; i < fileCount; i++) {
-                                if(strncmp(files[i], lastToken, strlen(lastToken)) == 0) {
+                                char *lowercaseFile = strToLower(files[i], strlen(files[i]));
+                                if(strncmp(lowercaseFile, lowercaseToken, strlen(lowercaseToken)) == 0) {
                                     int fileNameLength = strlen(files[i]);
                                     maxLen = (fileNameLength > maxLen) ? fileNameLength : maxLen;
                                     matches[matchIndex] = malloc(fileNameLength * sizeof(char) + 1);
                                     strcpy(matches[matchIndex++], files[i]);
                                 }
+                                free(lowercaseFile);
                             }
+                            free(lowercaseToken);
 
                             char *match = calloc(maxLen + 1, sizeof(char));
-                            match[0] = lastToken[0];
+                            match[0] = tolower(lastToken[0]);
                             for(int i = 1; i < maxLen; i++) {
                                 for(int j = 0; j < matchCount; j++) {
                                     char nextMatchChar = matches[j][i];
                                     int charMatchCount = 0;
                                     for(int k = 0; k < matchCount; k++) {
                                         if(strlen(matches[k]) >= i) {
-                                            if (matches[k][i] == nextMatchChar) {
+                                            if (tolower(matches[k][i]) == tolower(nextMatchChar)) {
                                                 charMatchCount++;
                                             }
                                         }
@@ -224,7 +229,7 @@ int main() {
                 case 0x03: { // CTRL + C
                     exitShell(NULL, NULL, NULL);
                     break;
-                } 
+                }
                 default: {
                     if(ch > 0x20 && ch < 0x7E) {
                         int cursorX = getCursorX() - 3;

@@ -36,6 +36,7 @@ int getFilesCount(char *path);
 int *getFilesLen(char *path, int fileCount);
 char **getPathAndFilename(char* path);
 char **getFileNames(char* path);
+char *strToLower(char* str, int length);
 int hasAlphanumeric(char *arg);
 void printHistory(char **history, int *historyCount);
 char username[UNLEN + 1];
