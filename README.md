@@ -4,3 +4,13 @@
   - ```gcc -g shell.c -o shell.exe```
   
   - ```./shell.exe```
+
+
+### Available commands:
+  - ```ls```
+  - ```cd```
+  - ```mkdir```
+  - ```rm```
+  - ```clear```
+  - ```touch```
+  - ```echo```
