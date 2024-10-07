@@ -298,6 +298,7 @@ void touch(char *inputCommand, char **args, int* argc) {
             FILE *file = fopen(args[1], "w");
             if (file == NULL) {
                 printf("Error creating file.\n");
+                return;
             }
             fclose(file);
             printf("File '%s' created successfully\n", args[1]);

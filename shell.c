@@ -117,8 +117,7 @@ int main() {
                             free(lowercaseToken);
 
                             char *match = calloc(maxLen + 1, sizeof(char));
-                            match[0] = tolower(lastToken[0]);
-                            for(int i = 1; i < maxLen; i++) {
+                            for(int i = 0; i < maxLen; i++) {
                                 for(int j = 0; j < matchCount; j++) {
                                     char nextMatchChar = matches[j][i];
                                     int charMatchCount = 0;
