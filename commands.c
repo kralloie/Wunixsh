@@ -292,7 +292,27 @@ void ls (char *inputCommand, char **args, int *argc) {
     return;
 }
 
-void touch(char *inputCommand, char **args, int* argc) {
+void cat(char *inputCommand, char **args, int *argc) {
+    char fileBuffer[256];
+    if (*argc > 1) {
+        if (hasAlphanumeric(args[1])) {
+            FILE *file = fopen(args[1], "r");
+            if (file == NULL) {
+                printf("File doesn't exists.");
+                return;
+            }
+            while (fgets(fileBuffer, sizeof(fileBuffer), file) != NULL){
+                printf("%s", fileBuffer);
+            }
+            fclose(file);
+        } else {
+            printf("Invalid file name.\n");
+        }
+        return;
+    }
+}
+
+void touch(char *inputCommand, char **args, int *argc) {
     if (*argc > 1) {
         if (hasAlphanumeric(args[1])) {
             FILE *file = fopen(args[1], "w");

@@ -30,6 +30,7 @@ void exitShell(char*, char**, int*);
 void touch(char *inputCommand, char **args, int *argc);
 void makedir(char *inputCommand, char **args, int *argc);
 void rm(char *inputCommand, char **args, int *argc);
+void cat(char *inputCommand, char **args, int *argc);
 int getCursorY();
 int getCursorX();
 int getFilesCount(char *path);
@@ -50,7 +51,8 @@ Command commands[] = {
     { "exit", exitShell },
     { "touch", touch },
     { "mkdir", makedir },
-    { "rm", rm }
+    { "rm", rm },
+    { "cat", cat }
 };
 
 const int commandCount = sizeof(commands) / sizeof(Command);
