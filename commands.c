@@ -154,13 +154,17 @@ int printFileName(WIN32_FIND_DATA *fileData) {
 
     if (attributes & FILE_ATTRIBUTE_REPARSE_POINT) {
         SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_BLUE);
-        printf("\033[1m%s@\033[0m", fileName);
+        printf("\033[1m%s\033[0m", fileName);
+        SetConsoleTextAttribute(hConsole, 7);
+        printf("@");
         return 1;
     }
 
     if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
         SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
-        printf("\033[1m%s/\033[0m", fileName);
+        printf("\033[1m%s\033[0m", fileName);
+        SetConsoleTextAttribute(hConsole, 7);
+        printf("/");
         return 1;
     }
 
