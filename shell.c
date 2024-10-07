@@ -64,6 +64,10 @@ int main() {
                         if(lastToken == NULL) {
                             lastToken = strdup(input);
                         }
+                        
+                        if(lastToken[strlen(lastToken) - 1] == '/') {
+                            break;
+                        }
 
                         char path[MAX_PATH];
                         snprintf(path, sizeof(path), "%s/", cwd);
@@ -133,7 +137,6 @@ int main() {
                                     }
                                 }
                             }
-
                             input[0] = '\0';
                             if(tokenCount > 1) {
                                 for (int i = 0; i < tokenCount - 1; i++) {
