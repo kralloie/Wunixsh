@@ -1,8 +1,6 @@
 #include "main.h"
 
 int main() {
-    char *history[MAX_HISTORY];
-    int historyCount = 0;
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     GetUserName(username, &username_len);
 

@@ -9,6 +9,9 @@
 #include <ctype.h>
 #include <signal.h>
 
+int historyCount = 0;
+char* history[100];
+
 const char *compressedExtensions[] = { ".tar", ".zip", ".rar", ".arc", ".gz", ".hqx", ".sit" };
 const size_t compressedExtensionsSz = sizeof(compressedExtensions);
 
@@ -378,17 +381,28 @@ void rm(char *inputCommand, char **args, int* argc) {
     return;
 }
 
+void historyCommand(char *inputCommand, char **args, int *argc) {
+    if(historyCount == 1) {
+        printf("History is empty.\n");
+        return;
+    }
+    for(int i = 0; i < historyCount - 1; i++) {
+        printf(" %d %s\n", i, history[i]);
+    }
+    return;
+};
+
 void cd(char *inputCommand, char **args, int* argc) {
     if(*argc < 2) {
         return;
     }
-    printf("Path: %s\n", args[1]);
     if(_chdir(args[1]) != 0) {
         printf("Invalid directory.\n");
     }
 
     return;
 }
+
 
 void clear(char *_, char**__, int *___) {
     system("cls");

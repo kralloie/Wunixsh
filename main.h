@@ -31,6 +31,7 @@ void touch(char *inputCommand, char **args, int *argc);
 void makedir(char *inputCommand, char **args, int *argc);
 void rm(char *inputCommand, char **args, int *argc);
 void cat(char *inputCommand, char **args, int *argc);
+void historyCommand(char *inputCommand, char **args, int *argc);
 int getCursorY();
 int getCursorX();
 int getFilesCount(char *path);
@@ -42,6 +43,8 @@ int hasAlphanumeric(char *arg);
 void printHistory(char **history, int *historyCount);
 char username[UNLEN + 1];
 DWORD username_len = sizeof(username);
+extern char *history[];
+extern int historyCount;
 
 Command commands[] = {
     { "echo", echo },
@@ -52,7 +55,8 @@ Command commands[] = {
     { "touch", touch },
     { "mkdir", makedir },
     { "rm", rm },
-    { "cat", cat }
+    { "cat", cat },
+    { "history", historyCommand }
 };
 
 const int commandCount = sizeof(commands) / sizeof(Command);
