@@ -18,3 +18,4 @@
   - ```touch```
   - ```echo```
   - ```cat```
+  - ```history```
