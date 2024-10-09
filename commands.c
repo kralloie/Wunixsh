@@ -83,6 +83,7 @@ int *getFilesLen(char *path, const int fileCount) {
     HANDLE hFind;
     hFind = FindFirstFile(path, &fileData);
     if (hFind == INVALID_HANDLE_VALUE) {
+        free(filesLen);
         return 0;
     }
 
@@ -393,25 +394,18 @@ void historyCommand(char *inputCommand, char **args, int *argc) {
 };
 
 void cp(char *inputCommand, char **args, int* argc) {
-    if(*argc > 1) {
-        if(hasAlphanumeric(args[1]) && hasAlphanumeric(args[2])) {
-            BOOL result = CopyFile(args[1], args[2], FALSE);
-            if (result) {
-                return;
-            } else {
-                printf("Failed to copy file.\n");
+    if(*argc > 2) {
+        if(hasAlphanumeric(args[1])) {
+            char *destiny = calloc(sizeof(args[2]) + sizeof(args[1]), sizeof(char));
+            strcpy(destiny, args[2]);
+            if (destiny[strlen(destiny) - 1] == '/' || destiny[strlen(destiny) - 1] == '.') {
+                char **filename = getPathAndFilename(args[1]);
+                strcat(destiny, "/");
+                strcat(destiny, filename[1]);
+                free(filename);
             }
-        } else {
-            printf("Invalid file name.\n");
-        }
-    }
-    return;
-}
-
-void mv(char *inputCommand, char **args, int* argc) {
-    if(*argc > 1) {
-        if(hasAlphanumeric(args[1]) && hasAlphanumeric(args[2])) {
-            BOOL result = MoveFile(args[1], args[2]);
+            BOOL result = CopyFile(args[1], destiny, FALSE);
+            free(destiny);
             if (result) {
                 return;
             } else {
@@ -420,6 +414,35 @@ void mv(char *inputCommand, char **args, int* argc) {
         } else {
             printf("Invalid file name.\n");
         }
+    } else {
+        printf("Insufficient arguments.\n");
+    }
+    return;
+}
+
+void mv(char *inputCommand, char **args, int* argc) {
+    if(*argc > 2) {
+        if(hasAlphanumeric(args[1])) {
+            char *destiny = calloc(sizeof(args[2]) + sizeof(args[1]), sizeof(char));
+            strcpy(destiny, args[2]);
+            if (args[2][strlen(args[2]) - 1] == '/' || args[2][strlen(args[2]) - 1] == '.') {
+                char **filename = getPathAndFilename(args[1]);
+                strcat(destiny, "/");
+                strcat(destiny, filename[1]);
+                free(filename);
+            }
+            BOOL result = MoveFile(args[1], destiny);
+            free(destiny);
+            if (result) {
+                return;
+            } else {
+                printf("Failed to move file.\n");
+            }
+        } else {
+            printf("Invalid file name.\n");
+        }
+    } else {
+        printf("Insufficient arguments.\n");
     }
     return;
 }
@@ -431,7 +454,6 @@ void cd(char *inputCommand, char **args, int* argc) {
     if(_chdir(args[1]) != 0) {
         printf("Invalid directory.\n");
     }
-
     return;
 }
 
