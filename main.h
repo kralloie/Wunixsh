@@ -32,6 +32,8 @@ void makedir(char *inputCommand, char **args, int *argc);
 void rm(char *inputCommand, char **args, int *argc);
 void cat(char *inputCommand, char **args, int *argc);
 void historyCommand(char *inputCommand, char **args, int *argc);
+void cp(char *inputCommand, char **args, int *argc);
+void mv(char *inputCommand, char **args, int *argc);
 int getCursorY();
 int getCursorX();
 int getFilesCount(char *path);
@@ -56,7 +58,9 @@ Command commands[] = {
     { "mkdir", makedir },
     { "rm", rm },
     { "cat", cat },
-    { "history", historyCommand }
+    { "history", historyCommand },
+    { "cp", cp },
+    { "mv", mv }
 };
 
 const int commandCount = sizeof(commands) / sizeof(Command);

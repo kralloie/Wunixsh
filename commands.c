@@ -392,6 +392,38 @@ void historyCommand(char *inputCommand, char **args, int *argc) {
     return;
 };
 
+void cp(char *inputCommand, char **args, int* argc) {
+    if(*argc > 1) {
+        if(hasAlphanumeric(args[1]) && hasAlphanumeric(args[2])) {
+            BOOL result = CopyFile(args[1], args[2], FALSE);
+            if (result) {
+                return;
+            } else {
+                printf("Failed to copy file.\n");
+            }
+        } else {
+            printf("Invalid file name.\n");
+        }
+    }
+    return;
+}
+
+void mv(char *inputCommand, char **args, int* argc) {
+    if(*argc > 1) {
+        if(hasAlphanumeric(args[1]) && hasAlphanumeric(args[2])) {
+            BOOL result = MoveFile(args[1], args[2]);
+            if (result) {
+                return;
+            } else {
+                printf("Failed to move file.\n");
+            }
+        } else {
+            printf("Invalid file name.\n");
+        }
+    }
+    return;
+}
+
 void cd(char *inputCommand, char **args, int* argc) {
     if(*argc < 2) {
         return;
