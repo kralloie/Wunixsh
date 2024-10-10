@@ -261,14 +261,34 @@ int main() {
             char *token;
             char *inputCommand;
             int argc = 0;
+            char *quotatedArgs[MAX_ARGS];
+            int quotatedArgsCounter = 0;
+            int quotatedArgsIndex = 0;
 
+            while (strchr(input, '\'') != NULL) {
+                quotatedArgs[quotatedArgsCounter++] = getQuotatedName(input);
+                char *start = strchr(input, '\'');
+                char *end = strchr(start + 1, '\'');
+                if (end == NULL) {
+                    break;
+                }
+                for (char *p = start; p <= end; p++) {
+                    *p = '?';
+                }
+            }
             token = strtok(input, " \n");
             while (token != NULL && argc < MAX_ARGS - 1) {
                 if(argc == 0) {
                     inputCommand = token;
                     strcat(inputCommand, "\0");
                 }
-                args[argc++] = token;
+                if (strchr(token, '?') != NULL) {
+                    if(strlen(token) == strlen(quotatedArgs[quotatedArgsIndex]) + 2) { // + 2 = 2 quotes.
+                        args[argc++] = quotatedArgs[quotatedArgsIndex++];
+                    }
+                } else {
+                    args[argc++] = token;
+                }
                 token = strtok(NULL, " \n");
             }
 
@@ -287,6 +307,10 @@ int main() {
             }
 
             if (validCommand == 0) {
+                if (strchr(inputCommand, '?') != NULL && quotatedArgsCounter > 0) {
+                    free(inputCommand);
+                    inputCommand = quotatedArgs[0];
+                }
                 printf("'%s' is not a valid command.\n", inputCommand);
             }
 

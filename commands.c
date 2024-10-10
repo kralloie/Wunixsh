@@ -28,6 +28,27 @@ void prompt(HANDLE hConsole, SYSTEMTIME time, char *cwd, char *prefix, char *use
     fflush(stdout);
 }
 
+char *getQuotatedName(char *str) {
+    char *start = strchr(str, '\'');
+    if (start == NULL) {
+        return NULL;
+    }
+
+    char *end = strchr(start + 1, '\'');
+    if (end == NULL) {
+        return NULL;
+    }
+
+    size_t length = end - start - 1;
+    char *result = calloc(length + 1, sizeof(char));
+    if (result == NULL) {
+        return NULL;
+    }
+    
+    strncpy(result, start + 1, length);
+    return result;
+}
+
 char *strToLower(char* str, int length) {
     char* lowercaseStr = calloc(length + 1, sizeof(char));
     for(int i = 0; i < length; i++) {
@@ -84,11 +105,11 @@ int *getFilesLen(char *path, const int fileCount) {
     hFind = FindFirstFile(path, &fileData);
     if (hFind == INVALID_HANDLE_VALUE) {
         free(filesLen);
-        return 0;
+        return NULL;
     }
 
     do {
-        filesLen[index++] = strlen(fileData.cFileName) + (fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? 1 : 0);
+        filesLen[index++] = strlen(fileData.cFileName) + (fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? 1 : 0) + (strchr(fileData.cFileName, ' ') != NULL ? 2 : 0);
     } while(FindNextFile(hFind, &fileData) != 0);
     FindClose(hFind);
     return filesLen;
@@ -124,9 +145,18 @@ char **getFileNames(char* path) {
         HANDLE hFind;
         hFind = FindFirstFile(path, &fileData);
         do {
-            char* fileName = fileData.cFileName;
+            char* fileName = calloc(strlen(fileData.cFileName) + 4, sizeof(char));
+            strcpy(fileName, fileData.cFileName);
             if (fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
                 strcat(fileName, "/");
+            }
+            if (strchr(fileName, ' ') != NULL) {
+                char *quotatedFilename = calloc(strlen(fileName) + 3, sizeof(char));
+                quotatedFilename[0] = '\'';
+                strcat(quotatedFilename, fileName);
+                strcat(quotatedFilename, "'");
+                free(fileName);
+                fileName = quotatedFilename;
             }
             strcpy(fileNames[fileIndex++], fileName);
         } while(FindNextFile(hFind, &fileData) != 0);
@@ -151,9 +181,20 @@ int checkExtension(char* fileName, const char *extensions[], const size_t *extSz
 int printFileName(WIN32_FIND_DATA *fileData) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     DWORD attributes = fileData->dwFileAttributes;
-    char* fileName = strdup(fileData->cFileName);
+    char *fileName = strdup(fileData->cFileName);
+    int offset = 0;
     if (attributes == INVALID_FILE_ATTRIBUTES) {
         return 0;
+    }
+
+    if (strchr(fileName, ' ') != NULL) {
+        char *quotatedFilename = calloc(strlen(fileName) + 3, sizeof(char));
+        quotatedFilename[0] = '\'';
+        strcat(quotatedFilename, fileName);
+        strcat(quotatedFilename, "'");
+        free(fileName);
+        fileName = quotatedFilename;
+        offset = 2;
     }
 
     if (attributes & FILE_ATTRIBUTE_REPARSE_POINT) {
@@ -181,12 +222,11 @@ int printFileName(WIN32_FIND_DATA *fileData) {
     if (checkExtension(fileName, compressedExtensions, &compressedExtensionsSz)) {
         SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
         printf("%s", fileName);
-        return 0;
     }
 
     SetConsoleTextAttribute(hConsole, 7);
     printf("%s", fileName);
-    return 0;
+    return offset;
 }
 
 void printHistory(char **history, int *historyCount) {
@@ -276,12 +316,12 @@ void ls (char *inputCommand, char **args, int *argc) {
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
         int isDir = fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
         SetConsoleTextAttribute(hConsole, (isDir) ? 10 : 7);
-        int dirOffset = printFileName(&fileData);
+        int offset = printFileName(&fileData);
 
         if(terminalLen < fileTotalLen) {
             columnCounter++;
             if(columnCounter < columns - 1) {
-                for(int i = 0; i < fileMaxLen - strlen(fileData.cFileName) + space - dirOffset; i++) {
+                for(int i = 0; i < fileMaxLen - strlen(fileData.cFileName) + space - offset; i++) {
                     printf(" ");
                 }
             }
