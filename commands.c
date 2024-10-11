@@ -125,6 +125,9 @@ char **getPathAndFilename(char* path) {
         token = strtok(NULL, "/");
     }
     filePath[strlen(path) - strlen(filename)] = '\0';
+    if(filePath == "") {
+        filePath = NULL;
+    }
     char **fileNameAndPath = malloc(2 * sizeof(char*));
     fileNameAndPath[0] = strdup(filePath);
     fileNameAndPath[1] = strdup(filename);
@@ -170,7 +173,7 @@ int checkExtension(char* fileName, const char *extensions[], const size_t *extSz
     int extIndex = *extSz / sizeof(extensions[0]);
     if(strlen(fileName) > strlen(extensions[0])) {
         for(int i = 0; i < extIndex; i++) {
-            if(strcmp(fileName + (strlen(fileName) - strlen(extensions[i])), extensions[i]) == 0) {
+            if(strstr(fileName + (strlen(fileName) - strlen(extensions[i])) - 1, extensions[i]) != NULL) {
                 return 1;
             }
         }
@@ -202,7 +205,7 @@ int printFileName(WIN32_FIND_DATA *fileData) {
         printf("\033[1m%s\033[0m", fileName);
         SetConsoleTextAttribute(hConsole, 7);
         printf("@");
-        return 1;
+        return offset + 1;
     }
 
     if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
@@ -210,18 +213,19 @@ int printFileName(WIN32_FIND_DATA *fileData) {
         printf("\033[1m%s\033[0m", fileName);
         SetConsoleTextAttribute(hConsole, 7);
         printf("/");
-        return 1;
+        return offset + 1;
     }
 
     if (checkExtension(fileName, executableExtensions, &executableExtensionsSz)) {
         SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
         printf("\033[1m%s\033[0m", fileName);
-        return 0;
+        return offset;
     }
  
     if (checkExtension(fileName, compressedExtensions, &compressedExtensionsSz)) {
         SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
         printf("%s", fileName);
+        return offset;
     }
 
     SetConsoleTextAttribute(hConsole, 7);
@@ -465,7 +469,7 @@ void mv(char *inputCommand, char **args, int* argc) {
         if(hasAlphanumeric(args[1])) {
             char *destiny = calloc(sizeof(args[2]) + sizeof(args[1]), sizeof(char));
             strcpy(destiny, args[2]);
-            if (args[2][strlen(args[2]) - 1] == '/' || args[2][strlen(args[2]) - 1] == '.') {
+            if (destiny[strlen(destiny) - 1] == '/' || destiny[strlen(destiny) - 1] == '.') {
                 char **filename = getPathAndFilename(args[1]);
                 strcat(destiny, "/");
                 strcat(destiny, filename[1]);

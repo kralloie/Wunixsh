@@ -89,7 +89,7 @@ int main() {
                         int fileCount = getFilesCount(path);
                         if (fileCount > 0) {
                             int fileIndex = 0;
-                            char* lowercaseToken = strToLower(lastToken, strlen(lastToken));
+                            char *lowercaseToken = strToLower(lastToken, strlen(lastToken));
                             char **files = getFileNames(path);
                             int matchCount = 0;
                             for(int i = 0; i < fileCount; i++) {
@@ -279,20 +279,33 @@ int main() {
             token = strtok(input, " \n");
             while (token != NULL && argc < MAX_ARGS - 1) {
                 if(argc == 0) {
-                    inputCommand = token;
-                    strcat(inputCommand, "\0");
+                    inputCommand = strdup(token);
                 }
-                if (strchr(token, '?') != NULL) {
-                    if(strlen(token) == strlen(quotatedArgs[quotatedArgsIndex]) + 2) { // + 2 = 2 quotes.
-                        args[argc++] = quotatedArgs[quotatedArgsIndex++];
-                    }
-                } else {
-                    args[argc++] = token;
-                }
+                args[argc++] = token;
                 token = strtok(NULL, " \n");
             }
-
             args[argc] = NULL;
+
+            for(int i = 0; i < argc; i++) {
+                if (strchr(args[i], '?') != NULL) {
+                    if (strchr(args[i], '/') != NULL) {
+                        char **pathAndFilename = getPathAndFilename(args[i]);
+                        if(strlen(pathAndFilename[1]) == strlen(quotatedArgs[quotatedArgsIndex]) + 2) { // + 2 = 2 quotes.
+                            free(args[i]);
+                            args[i] = calloc(strlen(pathAndFilename[1]) + strlen(pathAndFilename[0]) + 1, sizeof(char));
+                            strcpy(args[i], pathAndFilename[0]);
+                            strcat(args[i], quotatedArgs[quotatedArgsIndex++]);
+                        }
+                        free(pathAndFilename[0]);
+                        free(pathAndFilename[1]);
+                        free(pathAndFilename);
+                    } else {
+                        if(strlen(args[i]) == strlen(quotatedArgs[quotatedArgsIndex]) + 2) {
+                            args[i] = quotatedArgs[quotatedArgsIndex++];
+                        } 
+                    }
+                }
+            }
 
             char *lowerCaseCommand = calloc(strlen(inputCommand) + 1, sizeof(char));
             for(int i = 0; inputCommand[i] != '\0'; i++) {
