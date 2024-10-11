@@ -72,7 +72,7 @@ int main() {
                         char *pathToken = strdup(lastToken);
                         if(strchr(lastToken, '/') != NULL) {
                             char **pathAndFilename = getPathAndFilename(lastToken);
-                            if (strchr(lastToken, ':') != NULL) {
+                            if (strchr(lastToken, ':') != NULL || strchr(lastToken, '\'')) {
                                 snprintf(path, sizeof(path), "%s*", pathAndFilename[0]);
                             } else {
                                 snprintf(path, sizeof(path), "%s/%s*", cwd, lastToken);
