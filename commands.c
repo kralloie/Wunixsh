@@ -131,6 +131,7 @@ char **getPathAndFilename(char* path) {
     char **fileNameAndPath = malloc(2 * sizeof(char*));
     fileNameAndPath[0] = strdup(filePath);
     fileNameAndPath[1] = strdup(filename);
+    free(filename);
     free(pathCopy);
     return fileNameAndPath;
 }
@@ -233,18 +234,6 @@ int printFileName(WIN32_FIND_DATA *fileData) {
     return offset;
 }
 
-void printHistory(char **history, int *historyCount) {
-    printf("\n");
-    printf("---------History---------\n");
-    printf("Last Position: %s\n", history[*historyCount - 1]);
-    printf("History Count: %d\n", *historyCount);
-    for(int i = 0; i < *historyCount; i++ ) {
-        printf("%s - ", history[i]);
-    }
-    printf("\n");
-    printf("---------History---------\n");
-}
-
 int hasAlphanumeric(char *arg) {
     int alphanumericCharCount = 0;
     for (int i = 0; i < strlen(arg); i++) {
@@ -252,6 +241,19 @@ int hasAlphanumeric(char *arg) {
     }
     return alphanumericCharCount > 0;
 }
+
+// For debugging
+// void printHistory(char **history, int *historyCount) {
+//     printf("\n");
+//     printf("---------History---------\n");
+//     printf("Last Position: %s\n", history[*historyCount - 1]);
+//     printf("History Count: %d\n", *historyCount);
+//     for(int i = 0; i < *historyCount; i++ ) {
+//         printf("%s - ", history[i]);
+//     }
+//     printf("\n");
+//     printf("---------History---------\n");
+// }
 
 // --------- Commands ---------
 
@@ -440,7 +442,7 @@ void historyCommand(char *inputCommand, char **args, int *argc) {
 void cp(char *inputCommand, char **args, int* argc) {
     if(*argc > 2) {
         if(hasAlphanumeric(args[1])) {
-            char *destiny = calloc(sizeof(args[2]) + sizeof(args[1]), sizeof(char));
+            char *destiny = calloc(strlen(args[2]) + strlen(args[1]), sizeof(char));
             strcpy(destiny, args[2]);
             if (destiny[strlen(destiny) - 1] == '/' || destiny[strlen(destiny) - 1] == '.') {
                 char **filename = getPathAndFilename(args[1]);
@@ -467,7 +469,7 @@ void cp(char *inputCommand, char **args, int* argc) {
 void mv(char *inputCommand, char **args, int* argc) {
     if(*argc > 2) {
         if(hasAlphanumeric(args[1])) {
-            char *destiny = calloc(sizeof(args[2]) + sizeof(args[1]), sizeof(char));
+            char *destiny = calloc(strlen(args[2]) + strlen(args[1]), sizeof(char));
             strcpy(destiny, args[2]);
             if (destiny[strlen(destiny) - 1] == '/' || destiny[strlen(destiny) - 1] == '.') {
                 char **filename = getPathAndFilename(args[1]);
@@ -476,7 +478,6 @@ void mv(char *inputCommand, char **args, int* argc) {
                 free(filename);
             }
             BOOL result = MoveFile(args[1], destiny);
-            free(destiny);
             if (result) {
                 return;
             } else {
