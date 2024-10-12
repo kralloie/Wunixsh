@@ -1,6 +1,6 @@
 ### Preview:
 
-<img src="https://i.imgur.com/3cXVTie.png">
+<img src="https://i.imgur.com/iMXsfVu.png">
 
 ### How to run:
   - Install [MinGW](https://sourceforge.net/projects/mingw/)
