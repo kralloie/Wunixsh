@@ -10,7 +10,6 @@ int main() {
         int historyIndex = 0;
 
         char cwd[MAX_PATH];
-        int validCommand = 0;
         if(_getcwd(cwd, sizeof(cwd)) == NULL) {
             printf("Unexpected Error!");
         }
@@ -257,78 +256,7 @@ int main() {
         }
 
         if(index > 0) {
-            char *args[MAX_ARGS];
-            char *token;
-            char *inputCommand;
-            int argc = 0;
-            char *quotatedArgs[MAX_ARGS];
-            int quotatedArgsCounter = 0;
-            int quotatedArgsIndex = 0;
-
-            while (strchr(input, '\'') != NULL) {
-                quotatedArgs[quotatedArgsCounter++] = getQuotatedName(input);
-                char *start = strchr(input, '\'');
-                char *end = strchr(start + 1, '\'');
-                if (end == NULL) {
-                    break;
-                }
-                for (char *p = start; p <= end; p++) {
-                    *p = '?';
-                }
-            }
-            token = strtok(input, " \n");
-            while (token != NULL && argc < MAX_ARGS - 1) {
-                if(argc == 0) {
-                    inputCommand = strdup(token);
-                }
-                args[argc++] = token;
-                token = strtok(NULL, " \n");
-            }
-            args[argc] = NULL;
-
-            for(int i = 0; i < argc; i++) {
-                if (strchr(args[i], '?') != NULL) {
-                    if (strchr(args[i], '/') != NULL) {
-                        char **pathAndFilename = getPathAndFilename(args[i]);
-                        if(strlen(pathAndFilename[1]) == strlen(quotatedArgs[quotatedArgsIndex]) + 2) { // + 2 = 2 quotes.
-                            free(args[i]);
-                            args[i] = calloc(strlen(pathAndFilename[1]) + strlen(pathAndFilename[0]) + 1, sizeof(char));
-                            strcpy(args[i], pathAndFilename[0]);
-                            strcat(args[i], quotatedArgs[quotatedArgsIndex++]);
-                        }
-                        free(pathAndFilename[0]);
-                        free(pathAndFilename[1]);
-                        free(pathAndFilename);
-                    } else {
-                        if(strlen(args[i]) == strlen(quotatedArgs[quotatedArgsIndex]) + 2) {
-                            args[i] = quotatedArgs[quotatedArgsIndex++];
-                        } 
-                    }
-                }
-            }
-
-            char *lowerCaseCommand = calloc(strlen(inputCommand) + 1, sizeof(char));
-            for(int i = 0; inputCommand[i] != '\0'; i++) {
-                lowerCaseCommand[i] = tolower(inputCommand[i]);
-            }
-
-            for (int i = 0; i < commandCount; i++) {
-                if(strcmp(commands[i].name, lowerCaseCommand) == 0) {
-                    validCommand = 1;
-                    commands[i].func(lowerCaseCommand, args, &argc);
-                }
-            }
-
-            if (validCommand == 0) {
-                if (strchr(inputCommand, '?') != NULL && quotatedArgsCounter > 0) {
-                    free(inputCommand);
-                    inputCommand = quotatedArgs[0];
-                }
-                printf("'%s' is not a valid command.\n", inputCommand);
-            }
-
-            printf("\n");
-            free(lowerCaseCommand);
+            executeCommand(input);
         }
     }
 

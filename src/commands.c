@@ -1,16 +1,24 @@
-#include <windows.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <conio.h>
-#include <string.h>
-#include <direct.h>
-#include <limits.h>
-#include <lmcons.h>
-#include <ctype.h>
-#include <signal.h>
+#include "main.h"
 
-int historyCount = 0;
 char* history[100];
+char username[UNLEN + 1];
+DWORD username_len = sizeof(username);
+int historyCount = 0;
+const Command commands[] = {
+    { "echo", echo },
+    { "ls", ls },
+    { "cd", cd },
+    { "clear", clear },
+    { "exit", exitShell },
+    { "touch", touch },
+    { "mkdir", makedir },
+    { "rm", rm },
+    { "cat", cat },
+    { "history", historyCommand },
+    { "cp", cp },
+    { "mv", mv }
+};
+int commandCount = sizeof(commands) / sizeof(Command);
 
 const char *compressedExtensions[] = { ".tar", ".zip", ".rar", ".arc", ".gz", ".hqx", ".sit" };
 const size_t compressedExtensionsSz = sizeof(compressedExtensions);
@@ -115,19 +123,16 @@ int *getFilesLen(char *path, const int fileCount) {
     return filesLen;
 }
 
-char **getPathAndFilename(char* path) {
+char **getPathAndFilename(char *path) {
     char *pathCopy = strdup(path);
     char *filePath = strdup(path);
-    char *filename = calloc(strlen(path), sizeof(char));
+    char *filename = calloc(strlen(path) + 1, sizeof(char));
     char *token = strtok(pathCopy, "/");
     while(token != NULL) {
         strcpy(filename, token);
         token = strtok(NULL, "/");
     }
     filePath[strlen(path) - strlen(filename)] = '\0';
-    if(filePath == "") {
-        filePath = NULL;
-    }
     char **fileNameAndPath = malloc(2 * sizeof(char*));
     fileNameAndPath[0] = strdup(filePath);
     fileNameAndPath[1] = strdup(filename);
@@ -136,7 +141,7 @@ char **getPathAndFilename(char* path) {
     return fileNameAndPath;
 }
 
-char **getFileNames(char* path) {
+char **getFileNames(char *path) {
     int fileCount = getFilesCount(path);
     if (fileCount > 0) {
         int *fileLengths = getFilesLen(path, fileCount);
@@ -170,7 +175,7 @@ char **getFileNames(char* path) {
     return NULL;
 }
 
-int checkExtension(char* fileName, const char *extensions[], const size_t *extSz) {
+int checkExtension(char *fileName, const char *extensions[], const size_t *extSz) {
     int extIndex = *extSz / sizeof(extensions[0]);
     if(strlen(fileName) > strlen(extensions[0])) {
         for(int i = 0; i < extIndex; i++) {
@@ -241,19 +246,6 @@ int hasAlphanumeric(char *arg) {
     }
     return alphanumericCharCount > 0;
 }
-
-// For debugging
-// void printHistory(char **history, int *historyCount) {
-//     printf("\n");
-//     printf("---------History---------\n");
-//     printf("Last Position: %s\n", history[*historyCount - 1]);
-//     printf("History Count: %d\n", *historyCount);
-//     for(int i = 0; i < *historyCount; i++ ) {
-//         printf("%s - ", history[i]);
-//     }
-//     printf("\n");
-//     printf("---------History---------\n");
-// }
 
 // --------- Commands ---------
 
@@ -513,3 +505,103 @@ void exitShell(char *_, char **__, int *___) {
 }
 
 // --------- Commands ---------
+
+void executeCommand(char *input) {
+    int validCommand = 0;
+    char *inputCopy = strdup(input);
+    char *args[MAX_ARGS];
+    char *token;
+    char *inputCommand;
+    int argc = 0;
+    char *quotatedArgs[MAX_ARGS];
+    int quotatedArgsCounter = 0;
+    int quotatedArgsIndex = 0;
+
+    char *pipe = strstr(input, "||");
+
+    for(int i = 0; i < strlen(input); i++) {
+        if (isalnum(input[i])) {
+            break;
+        }
+        if (input[i] == '|') {
+            return;
+        }
+    }
+
+    if (pipe != NULL) {
+        input[pipe - input] = '\0';
+    }
+
+    while (strchr(input, '\'') != NULL) {
+        quotatedArgs[quotatedArgsCounter++] = getQuotatedName(input);
+        char *start = strchr(input, '\'');
+        char *end = strchr(start + 1, '\'');
+        if (end == NULL) {
+            break;
+        }
+        for (char *p = start; p <= end; p++) {
+            *p = '?';
+        }
+    }
+    token = strtok(input, " \n");
+    while (token != NULL && argc < MAX_ARGS - 1) {
+        if(argc == 0) {
+            inputCommand = strdup(token);
+        }
+        args[argc++] = token;
+        token = strtok(NULL, " \n");
+    }
+    args[argc] = NULL;
+
+    for(int i = 0; i < argc; i++) {
+        if (strchr(args[i], '?') != NULL) {
+            if (strchr(args[i], '/') != NULL) {
+                char **pathAndFilename = getPathAndFilename(args[i]);
+                if(strlen(pathAndFilename[1]) == strlen(quotatedArgs[quotatedArgsIndex]) + 2) { // + 2 = 2 quotes.
+                    free(args[i]);
+                    args[i] = calloc(strlen(pathAndFilename[1]) + strlen(pathAndFilename[0]) + 1, sizeof(char));
+                    strcpy(args[i], pathAndFilename[0]);
+                    strcat(args[i], quotatedArgs[quotatedArgsIndex++]);
+                }
+                free(pathAndFilename[0]);
+                free(pathAndFilename[1]);
+                free(pathAndFilename);
+            } else {
+                if(strlen(args[i]) == strlen(quotatedArgs[quotatedArgsIndex]) + 2) {
+                    args[i] = quotatedArgs[quotatedArgsIndex++];
+                } 
+            }
+        }
+    }
+
+    char *lowerCaseCommand = calloc(strlen(inputCommand) + 1, sizeof(char));
+    for(int i = 0; inputCommand[i] != '\0'; i++) {
+        lowerCaseCommand[i] = tolower(inputCommand[i]);
+    }
+
+    for (int i = 0; i < commandCount; i++) {
+        if(strcmp(commands[i].name, lowerCaseCommand) == 0) {
+            validCommand = 1;
+            commands[i].func(lowerCaseCommand, args, &argc);
+        }
+    }
+
+    if (validCommand == 0) {
+        if (strchr(inputCommand, '?') != NULL && quotatedArgsCounter > 0) {
+            free(inputCommand);
+            inputCommand = quotatedArgs[0];
+        }
+        printf("'%s' is not a valid command.\n", inputCommand);
+    }
+
+    printf("\n");
+    free(lowerCaseCommand);
+
+    char *nextCommand = strstr(inputCopy, "||");
+    if (nextCommand != NULL) {
+        if (strlen(nextCommand) <= 2) {
+            return;
+        }
+        executeCommand(nextCommand + 2);
+    }
+}
