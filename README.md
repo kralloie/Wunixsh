@@ -1,15 +1,8 @@
-### Preview:
+## Preview:
 
-<img src="https://i.imgur.com/iMXsfVu.png">
+<img src="https://i.imgur.com/AAL6anI.png">
 
-### How to run:
-  - Install [MinGW](https://sourceforge.net/projects/mingw/)
-  
-  - ```gcc -g shell.c -o shell.exe```
-  
-  - ```./shell.exe```
-
-### Available commands:
+## Available commands:
   - ```ls```
   - ```cd```
   - ```mkdir```
@@ -21,3 +14,8 @@
   - ```history```
   - ```cp```
   - ```mv```
+
+## Features:
+  - __Command History__
+  - __Command Chaining__
+  - __Filename Auto Completion__
