@@ -50,6 +50,8 @@ void cat(char *inputCommand, char **args, int *argc);
 void historyCommand(char *inputCommand, char **args, int *argc);
 void cp(char *inputCommand, char **args, int *argc);
 void mv(char *inputCommand, char **args, int *argc);
+void pwd(char *inputCommand, char **args, int *argc);
+
 int getCursorY();
 int getCursorX();
 int getFilesCount(char *path);
@@ -59,6 +61,7 @@ char **getFileNames(char *path);
 char *strToLower(char *str, int length);
 char *getQuotatedName(char *str);
 int hasAlphanumeric(char *arg);
+
 void prompt(HANDLE, SYSTEMTIME, char*, char*, char*);
 void executeCommand(char *input);
 

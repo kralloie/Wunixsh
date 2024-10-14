@@ -16,7 +16,8 @@ const Command commands[] = {
     { "cat", cat },
     { "history", historyCommand },
     { "cp", cp },
-    { "mv", mv }
+    { "mv", mv },
+    { "pwd", pwd },
 };
 int commandCount = sizeof(commands) / sizeof(Command);
 
@@ -377,7 +378,7 @@ void touch(char *inputCommand, char **args, int *argc) {
     return;
 }
 
-void makedir(char *inputCommand, char **args, int* argc) {
+void makedir(char *inputCommand, char **args, int *argc) {
     if (*argc > 1) {
         if (hasAlphanumeric(args[1])) {
             if (CreateDirectory(args[1], NULL)) {
@@ -397,7 +398,7 @@ void makedir(char *inputCommand, char **args, int* argc) {
     return;
 }
 
-void rm(char *inputCommand, char **args, int* argc) {
+void rm(char *inputCommand, char **args, int *argc) {
     if (*argc > 1) {
         DWORD attributes = GetFileAttributes(args[1]);
         if (attributes == INVALID_FILE_ATTRIBUTES) {
@@ -431,7 +432,7 @@ void historyCommand(char *inputCommand, char **args, int *argc) {
     return;
 };
 
-void cp(char *inputCommand, char **args, int* argc) {
+void cp(char *inputCommand, char **args, int *argc) {
     if(*argc > 2) {
         if(hasAlphanumeric(args[1])) {
             char *destiny = calloc(strlen(args[2]) + strlen(args[1]), sizeof(char));
@@ -458,7 +459,7 @@ void cp(char *inputCommand, char **args, int* argc) {
     return;
 }
 
-void mv(char *inputCommand, char **args, int* argc) {
+void mv(char *inputCommand, char **args, int *argc) {
     if(*argc > 2) {
         if(hasAlphanumeric(args[1])) {
             char *destiny = calloc(strlen(args[2]) + strlen(args[1]), sizeof(char));
@@ -484,13 +485,23 @@ void mv(char *inputCommand, char **args, int* argc) {
     return;
 }
 
-void cd(char *inputCommand, char **args, int* argc) {
+void cd(char *inputCommand, char **args, int *argc) {
     if(*argc < 2) {
         return;
     }
     if(_chdir(args[1]) != 0) {
         printf("Invalid directory.\n");
     }
+    return;
+}
+
+void pwd(char *inputCommand, char **args, int *argc) {
+    char cwd[MAX_PATH];
+    if(_getcwd(cwd, sizeof(cwd)) == NULL) {
+        printf("Unexpected Error.");
+        return;
+    }
+    printf("Curent Working Directory: %s\n", cwd);
     return;
 }
 
