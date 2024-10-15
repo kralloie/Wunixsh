@@ -19,7 +19,8 @@ const Command commands[] = {
     { "mv", mv },
     { "pwd", pwd },
     { "shutdown", shtdwn },
-    { "reboot", rstrt }
+    { "reboot", rstrt },
+    { "df", df }
 };
 int commandCount = sizeof(commands) / sizeof(Command);
 
@@ -513,7 +514,7 @@ void cd(char *inputCommand, char **args, int *argc) {
     return;
 }
 
-void pwd(char *inputCommand, char **args, int *argc) {
+void pwd(char *_, char **__, int *___) {
     char cwd[MAX_PATH];
     if(_getcwd(cwd, sizeof(cwd)) == NULL) {
         printf("Unexpected Error.");
@@ -523,25 +524,59 @@ void pwd(char *inputCommand, char **args, int *argc) {
     return;
 }
 
-void shtdwn(char *inputCommand, char **args, int *argc) {
+void shtdwn(char *_, char **__, int *___) {
     enableShutdownPrivilege();
     ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCE, SHTDN_REASON_MAJOR_SOFTWARE);
-    return;
 }
 
-void rstrt(char *inputCommand, char **args, int *argc) {
+void rstrt(char *_, char **__, int *___) {
     enableShutdownPrivilege();
     ExitWindowsEx(EWX_REBOOT | EWX_FORCE, SHTDN_REASON_MAJOR_SOFTWARE);
-    return;
 }
 
-void clear(char *_, char**__, int *___) {
+void clear(char *_, char **__, int *___) {
     system("cls");
     return;
 }
 
 void exitShell(char *_, char **__, int *___) {
     exit(0);
+}
+
+void df(char *_, char **__, int *___) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD driveMask = GetLogicalDrives();
+    char drives[256];
+    DWORD driveCount = GetLogicalDriveStrings(sizeof(drives), drives);
+    if (driveCount == 0) {
+        printf("Error getting logical drives.\n");
+        return;
+    }
+    for(char *drive = drives; *drive != '\0'; drive += 4) {
+        if (GetDriveType(drive) == DRIVE_FIXED) {
+            ULARGE_INTEGER freeBytesAvailable, totalBytes, totalFreeBytes;
+            if (GetDiskFreeSpaceEx(drive, &freeBytesAvailable, &totalBytes, &totalFreeBytes)) {
+                unsigned long long totalBytesGB = totalBytes.QuadPart / (1024 * 1024 * 1024);
+                unsigned long long totalFreeBytesGB = totalFreeBytes.QuadPart / (1024 * 1024 * 1024);
+                printf("Disk: ");
+                SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
+                printf("\033[1m%s\033[0m ", drive);
+                SetConsoleTextAttribute(hConsole, 7);
+                printf("Total space: ");
+                SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
+                printf("\033[1m%lluGB\033[0m ", totalBytesGB);
+                SetConsoleTextAttribute(hConsole, 7);
+                printf("Free space: ");
+                SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
+                printf("\033[1m%lluGB\033[0m ", totalFreeBytesGB);
+                SetConsoleTextAttribute(hConsole, 7);
+                printf("Use%%: ");
+                SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
+                printf("\033[1m%f%%\033[0m\n", (((double)(totalBytesGB - totalFreeBytesGB)) / totalBytesGB) * 100);
+                SetConsoleTextAttribute(hConsole, 7);
+            }   
+        }
+    }
 }
 
 // --------- Commands ---------
