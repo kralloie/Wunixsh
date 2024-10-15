@@ -20,7 +20,8 @@ const Command commands[] = {
     { "pwd", pwd },
     { "shutdown", shtdwn },
     { "reboot", rstrt },
-    { "df", df }
+    { "df", df },
+    { "ipconfig", ipconfig }
 };
 int commandCount = sizeof(commands) / sizeof(Command);
 
@@ -576,6 +577,11 @@ void df(char *_, char **__, int *___) {
             }   
         }
     }
+    return;
+}
+
+void ipconfig(char *_, char **__, int *___) {
+    system("ipconfig");
     return;
 }
 

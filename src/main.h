@@ -56,6 +56,7 @@ void pwd(char*, char**, int*);
 void shtdwn(char*, char**, int*);
 void rstrt(char*, char**, int*);
 void df(char*, char**, int*);
+void ipconfig(char*, char**, int*);
 
 int getCursorY();
 int getCursorX();
