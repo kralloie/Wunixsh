@@ -21,7 +21,8 @@ const Command commands[] = {
     { "shutdown", shtdwn },
     { "reboot", rstrt },
     { "df", df },
-    { "ipconfig", ipconfig }
+    { "ipconfig", ipconfig },
+    { "ping", ping }
 };
 int commandCount = sizeof(commands) / sizeof(Command);
 
@@ -554,7 +555,7 @@ void df(char *_, char **__, int *___) {
         return;
     }
     SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
-    printf("Disk         ");
+    printf("Disk    ");
     printf("Total Space  ");
     printf("Free Space   ");
     printf("Use %%        \n");
@@ -570,7 +571,7 @@ void df(char *_, char **__, int *___) {
                 char totalFreeBytesStr[20];
                 snprintf(totalBytesStr, sizeof(totalBytesStr), "%lluGB", totalBytesGB);
                 snprintf(totalFreeBytesStr, sizeof(totalFreeBytesStr), "%lluGB", totalFreeBytesGB);
-                printf("\033[1m%s\033[0m%*s" , drive, outputPadding - strlen(drive), "");
+                printf("\033[1m%s\033[0m%*s" , drive, 5, "");
                 printf("\033[1m%s\033[0m%*s", totalBytesStr, outputPadding - strlen(totalBytesStr), "");
                 printf("\033[1m%s\033[0m%*s", totalFreeBytesStr, outputPadding - strlen(totalFreeBytesStr), "");
                 printf("\033[1m%d%%\033[0m\n", (int)ceil((((double)(totalBytesGB - totalFreeBytesGB)) / totalBytesGB) * 100));
@@ -582,6 +583,17 @@ void df(char *_, char **__, int *___) {
 
 void ipconfig(char *_, char **__, int *___) {
     system("ipconfig");
+    return;
+}
+
+void ping(char *inputCommand, char **args, int *argc) {
+    if (*argc < 2) {
+        printf("Insufficient arguments.\n");
+        return;
+    }
+    char* pingCommand = calloc(strlen(args[0]) + strlen(args[1]) + 2, sizeof(char));
+    snprintf(pingCommand, strlen(args[0]) + strlen(args[1]) + 2, "%s %s", inputCommand, args[1]);
+    system(pingCommand);
     return;
 }
 

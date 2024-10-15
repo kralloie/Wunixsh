@@ -52,6 +52,7 @@ void cat(char *inputCommand, char **args, int *argc);
 void historyCommand(char *inputCommand, char **args, int *argc);
 void cp(char *inputCommand, char **args, int *argc);
 void mv(char *inputCommand, char **args, int *argc);
+void ping(char *inputCommand, char **args, int *argc);
 void pwd(char*, char**, int*);
 void shtdwn(char*, char**, int*);
 void rstrt(char*, char**, int*);
