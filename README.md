@@ -14,6 +14,11 @@
   - ```history```
   - ```cp```
   - ```mv```
+  - ```pwd```
+  - ```shutdown```
+  - ```reboot```
+  - ```df```
+  - ```ipconfig```
 
 ## Features:
   - __Command History__
