@@ -19,6 +19,7 @@
   - ```reboot```
   - ```df```
   - ```ipconfig```
+  - ```ping```
 
 ## Features:
   - __Command History__
