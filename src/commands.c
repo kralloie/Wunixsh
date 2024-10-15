@@ -552,31 +552,31 @@ void df(char *_, char **__, int *___) {
         printf("Error getting logical drives.\n");
         return;
     }
+    SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
+    printf("Disk         ");
+    printf("Total Space  ");
+    printf("Free Space   ");
+    printf("Use %%        \n");
+    SetConsoleTextAttribute(hConsole, 7);
+    int outputPadding = 13;
     for(char *drive = drives; *drive != '\0'; drive += 4) {
         if (GetDriveType(drive) == DRIVE_FIXED) {
             ULARGE_INTEGER freeBytesAvailable, totalBytes, totalFreeBytes;
             if (GetDiskFreeSpaceEx(drive, &freeBytesAvailable, &totalBytes, &totalFreeBytes)) {
                 unsigned long long totalBytesGB = totalBytes.QuadPart / (1024 * 1024 * 1024);
                 unsigned long long totalFreeBytesGB = totalFreeBytes.QuadPart / (1024 * 1024 * 1024);
-                printf("Disk: ");
-                SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
-                printf("\033[1m%s\033[0m ", drive);
-                SetConsoleTextAttribute(hConsole, 7);
-                printf("Total space: ");
-                SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
-                printf("\033[1m%lluGB\033[0m ", totalBytesGB);
-                SetConsoleTextAttribute(hConsole, 7);
-                printf("Free space: ");
-                SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
-                printf("\033[1m%lluGB\033[0m ", totalFreeBytesGB);
-                SetConsoleTextAttribute(hConsole, 7);
-                printf("Use%%: ");
-                SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
-                printf("\033[1m%f%%\033[0m\n", (((double)(totalBytesGB - totalFreeBytesGB)) / totalBytesGB) * 100);
-                SetConsoleTextAttribute(hConsole, 7);
+                char totalBytesStr[20];
+                char totalFreeBytesStr[20];
+                snprintf(totalBytesStr, sizeof(totalBytesStr), "%lluGB", totalBytesGB);
+                snprintf(totalFreeBytesStr, sizeof(totalFreeBytesStr), "%lluGB", totalFreeBytesGB);
+                printf("\033[1m%s\033[0m%*s" , drive, outputPadding - strlen(drive), "");
+                printf("\033[1m%s\033[0m%*s", totalBytesStr, outputPadding - strlen(totalBytesStr), "");
+                printf("\033[1m%s\033[0m%*s", totalFreeBytesStr, outputPadding - strlen(totalFreeBytesStr), "");
+                printf("\033[1m%d%%\033[0m\n", (int)ceil((((double)(totalBytesGB - totalFreeBytesGB)) / totalBytesGB) * 100));
             }   
         }
     }
+    return;
 }
 
 // --------- Commands ---------

@@ -11,6 +11,7 @@
 #include <lmcons.h>
 #include <ctype.h>
 #include <signal.h>
+#include <math.h>
 
 #define SHELL_PREFIX "$ "
 #define MAX_INPUT 1024
