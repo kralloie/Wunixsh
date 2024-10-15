@@ -11,7 +11,7 @@ int main() {
 
         char cwd[MAX_PATH];
         if(_getcwd(cwd, sizeof(cwd)) == NULL) {
-            printf("Unexpected Error!");
+            printf("Unexpected Error.");
         }
 
         prompt(hConsole, time, cwd, SHELL_PREFIX, username);

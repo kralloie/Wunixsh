@@ -25,6 +25,7 @@
 #define RIGHT_ARROW 0x4D
 #define LEFT_ARROW 0x4B
 #define MAX_HISTORY 100
+#define SHTDN_REASON_MAJOR_SOFTWARE 0x00030000
 
 typedef void (*CommandFunc)(char*, char**, int*);
 
@@ -51,6 +52,8 @@ void historyCommand(char *inputCommand, char **args, int *argc);
 void cp(char *inputCommand, char **args, int *argc);
 void mv(char *inputCommand, char **args, int *argc);
 void pwd(char *inputCommand, char **args, int *argc);
+void shtdwn(char *inputCommand, char **args, int *argc);
+void rstrt(char *inputCommand, char **args, int *argc);
 
 int getCursorY();
 int getCursorX();
