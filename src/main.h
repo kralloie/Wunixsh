@@ -68,6 +68,7 @@ char **getFileNames(char *path);
 char *strToLower(char *str, int length);
 char *getQuotatedName(char *str);
 int hasAlphanumeric(char *arg);
+void getBranch(char *branch);
 
 void prompt(HANDLE, SYSTEMTIME, char*, char*, char*);
 void executeCommand(char *input);

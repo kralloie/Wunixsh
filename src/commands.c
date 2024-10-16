@@ -32,11 +32,27 @@ const size_t compressedExtensionsSz = sizeof(compressedExtensions);
 const char *executableExtensions[] = { ".exe", ".bat", ".com", ".cmd", ".msi" };
 const size_t executableExtensionsSz = sizeof(executableExtensions);
 
+void getBranch(char *branch) {
+    FILE *fp = popen("git symbolic-ref --short HEAD 2>NUL", "r");
+    fgets(branch, 100, fp);
+    branch[strcspn(branch, "\n")] = 0;
+    pclose(fp);
+    return;
+}
+
 void prompt(HANDLE hConsole, SYSTEMTIME time, char *cwd, char *prefix, char *username) {
+    char branch[100];
+    getBranch(branch);
     SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_BLUE);
     printf("\033[1m[%s - %02d:%02d:%02d] - \033[0m", username, time.wHour, time.wMinute, time.wSecond);
     SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_BLUE);
-    printf("\033[1m%s\033[0m\n", cwd);
+    printf("\033[1m%s\033[0m ", cwd);
+    if (branch[0] != '\0') {
+        SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
+        printf("(%s)\n", branch);
+    } else {
+        printf("\n");
+    }
     SetConsoleTextAttribute(hConsole, 7);
     printf("%s", prefix);
     fflush(stdout);
