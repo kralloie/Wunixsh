@@ -22,7 +22,8 @@ const Command commands[] = {
     { "reboot", rstrt },
     { "df", df },
     { "ipconfig", ipconfig },
-    { "ping", ping }
+    { "ping", ping },
+    { "git", git }
 };
 int commandCount = sizeof(commands) / sizeof(Command);
 
@@ -610,6 +611,21 @@ void ping(char *inputCommand, char **args, int *argc) {
     char* pingCommand = calloc(strlen(args[0]) + strlen(args[1]) + 2, sizeof(char));
     snprintf(pingCommand, strlen(args[0]) + strlen(args[1]) + 2, "%s %s", inputCommand, args[1]);
     system(pingCommand);
+    return;
+}
+
+void git(char *inputCommand, char **args, int *argc) {
+    int totalLength = 0;
+    for(int i = 0; i < *argc; i++) {
+        totalLength += strlen(args[i]) + 1;
+    }
+    char *command = calloc(totalLength, sizeof(char));
+    for(int i = 0; i < *argc; i++) {
+        strcat(command, args[i]);
+        strcat(command, " ");
+    }
+    system(command);
+    free(command);
     return;
 }
 
