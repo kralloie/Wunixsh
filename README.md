@@ -1,6 +1,6 @@
 ## Preview:
 
-<img src="https://i.imgur.com/AAL6anI.png">
+<img src="https://i.imgur.com/9XTM9sg.png">
 
 ## Available commands:
   - ```ls```
