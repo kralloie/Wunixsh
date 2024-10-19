@@ -52,7 +52,6 @@ void getBranch(char *branch) {
             branch = "\0";
             return;
         }
-        printf("Branch: %s\n", branch);
         branch[strcspn(branch, "\n")] = 0;
         pclose(fp);
         return;
