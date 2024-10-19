@@ -35,12 +35,30 @@ const size_t compressedExtensionsSz = sizeof(compressedExtensions);
 const char *executableExtensions[] = { ".exe", ".bat", ".com", ".cmd", ".msi" };
 const size_t executableExtensionsSz = sizeof(executableExtensions);
 
+BOOL isWorktree() {
+    char isWorktreeStr[6];
+    FILE *fp = popen("git rev-parse --is-inside-work-tree 2>NUL", "r");
+    fgets(isWorktreeStr, 6, fp);
+    fclose(fp);
+    return strcmp(isWorktreeStr, "true\n") == 0;
+}
+
 void getBranch(char *branch) {
-    FILE *fp = popen("git symbolic-ref --short HEAD 2>NUL", "r");
-    fgets(branch, 100, fp);
-    branch[strcspn(branch, "\n")] = 0;
-    pclose(fp);
-    return;
+    if(isWorktree()) {
+        FILE *fp = popen("git symbolic-ref --short HEAD 2>NUL", "r");
+        fgets(branch, 100, fp);
+        if(fp == NULL) {
+            pclose(fp);
+            branch = "\0";
+            return;
+        }
+        printf("Branch: %s\n", branch);
+        branch[strcspn(branch, "\n")] = 0;
+        pclose(fp);
+        return;
+    } else {
+        strcpy(branch, "");
+    }
 }
 
 void prompt(HANDLE hConsole, SYSTEMTIME time, char *cwd, char *prefix, char *username) {
@@ -50,7 +68,7 @@ void prompt(HANDLE hConsole, SYSTEMTIME time, char *cwd, char *prefix, char *use
     printf("\033[1m[%s - %02d:%02d:%02d] - \033[0m", username, time.wHour, time.wMinute, time.wSecond);
     SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_BLUE);
     printf("\033[1m%s\033[0m ", cwd);
-    if (branch[0] != '\0') {
+    if (strcmp(branch, "") != 0) {
         SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
         printf("(%s)\n", branch);
     } else {
