@@ -20,6 +20,8 @@
   - ```df```
   - ```ipconfig```
   - ```ping```
+  - ```ps```
+  - ```kill```
 
 ## Features:
   - __Command History__
