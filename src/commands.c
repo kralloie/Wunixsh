@@ -23,7 +23,9 @@ const Command commands[] = {
     { "df", df },
     { "ipconfig", ipconfig },
     { "ping", ping },
-    { "git", git }
+    { "git", git },
+    { "ps", ps },
+    { "kill", kill }
 };
 int commandCount = sizeof(commands) / sizeof(Command);
 
@@ -54,7 +56,7 @@ void prompt(HANDLE hConsole, SYSTEMTIME time, char *cwd, char *prefix, char *use
     } else {
         printf("\n");
     }
-    SetConsoleTextAttribute(hConsole, 7);
+    SetConsoleTextAttribute(hConsole, FOREGROUND_WHITE);
     printf("%s", prefix);
     fflush(stdout);
 }
@@ -232,7 +234,7 @@ int printFileName(WIN32_FIND_DATA *fileData) {
     if (attributes & FILE_ATTRIBUTE_REPARSE_POINT) {
         SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_BLUE);
         printf("\033[1m%s\033[0m", fileName);
-        SetConsoleTextAttribute(hConsole, 7);
+        SetConsoleTextAttribute(hConsole, FOREGROUND_WHITE);
         printf("@");
         return offset + 1;
     }
@@ -240,7 +242,7 @@ int printFileName(WIN32_FIND_DATA *fileData) {
     if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
         SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
         printf("\033[1m%s\033[0m", fileName);
-        SetConsoleTextAttribute(hConsole, 7);
+        SetConsoleTextAttribute(hConsole, FOREGROUND_WHITE);
         printf("/");
         return offset + 1;
     }
@@ -257,7 +259,7 @@ int printFileName(WIN32_FIND_DATA *fileData) {
         return offset;
     }
 
-    SetConsoleTextAttribute(hConsole, 7);
+    SetConsoleTextAttribute(hConsole, FOREGROUND_WHITE);
     printf("%s", fileName);
     return offset;
 }
@@ -284,6 +286,32 @@ void enableShutdownPrivilege() {
     tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
     AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
     CloseHandle(hToken);
+}
+
+void enableDebugPrivilege()
+{
+	HANDLE hToken;
+	LUID sedebugnameValue;
+	TOKEN_PRIVILEGES tkp;
+
+	if ( ! OpenProcessToken( GetCurrentProcess(),
+		TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken ) )
+	{
+		return;
+	}
+
+	if ( ! LookupPrivilegeValue( NULL, SE_DEBUG_NAME, &sedebugnameValue ) )
+	{
+		CloseHandle( hToken );
+		return;
+	}
+
+	tkp.PrivilegeCount = 1;
+	tkp.Privileges[0].Luid = sedebugnameValue;
+	tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+	if ( ! AdjustTokenPrivileges( hToken, FALSE, &tkp, sizeof tkp, NULL, NULL ) )
+	CloseHandle( hToken );
 }
 
 // --------- Commands ---------
@@ -576,7 +604,7 @@ void df(char *_, char **__, int *___) {
     printf("Total Space  ");
     printf("Free Space   ");
     printf("Use %%        \n");
-    SetConsoleTextAttribute(hConsole, 7);
+    SetConsoleTextAttribute(hConsole, FOREGROUND_WHITE);
     int outputPadding = 13;
     for(char *drive = drives; *drive != '\0'; drive += 4) {
         if (GetDriveType(drive) == DRIVE_FIXED) {
@@ -626,6 +654,59 @@ void git(char *inputCommand, char **args, int *argc) {
     }
     system(command);
     free(command);
+    return;
+}
+
+void ps(char *inputCommand, char **args, int *argc) {
+    enableDebugPrivilege();
+    DWORD processes[2048], bytesReturned, processCount;
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE hProcess;
+    char processName[MAX_PATH];
+
+    if(!EnumProcesses(processes, sizeof(processes), &bytesReturned)) {
+        printf("Failed to enumerate processes.\n");
+        return;
+    }
+    processCount = bytesReturned / sizeof(DWORD);
+    printf("\033[1mPID   Name\n\033[0m");
+    for (int i = 0; i < processCount; i++) {
+        if (processes[i] != 0) {
+            hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processes[i]);
+            if (hProcess) {
+                if (GetModuleBaseName(hProcess, NULL, processName, sizeof(processName))) {
+                    char *pid = calloc(6, sizeof(char));
+                    snprintf(pid, 6, "%lu", processes[i]);
+                    SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
+                    printf("%s%*s", pid, 6 - strlen(pid), "");
+                    SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
+                    printf("%s\n", processName);
+                    SetConsoleTextAttribute(hConsole, FOREGROUND_WHITE);
+                    free(pid);
+                }
+            }
+            CloseHandle(hProcess);
+        }
+    }
+}
+
+void kill(char *inputCommand, char **args, int *argc) { 
+    if (*argc < 2) {
+        printf("Insufficient arguments.\n");
+        return;
+    }
+
+    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, (DWORD)atoi(args[1]));
+    if(hProcess == NULL) {
+        printf("Failed to open process.\n");
+        return;
+    }
+
+    if(!TerminateProcess(hProcess, 0)) {
+        printf("Failed to terminate process.\n");
+    }
+
+    CloseHandle(hProcess);
     return;
 }
 

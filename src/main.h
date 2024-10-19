@@ -12,6 +12,7 @@
 #include <ctype.h>
 #include <signal.h>
 #include <math.h>
+#include <psapi.h>
 
 #define SHELL_PREFIX "$ "
 #define MAX_INPUT 1024
@@ -26,6 +27,7 @@
 #define RIGHT_ARROW 0x4D
 #define LEFT_ARROW 0x4B
 #define MAX_HISTORY 100
+#define FOREGROUND_WHITE 7
 #define SHTDN_REASON_MAJOR_SOFTWARE 0x00030000
 
 typedef void (*CommandFunc)(char*, char**, int*);
@@ -54,11 +56,13 @@ void cp(char *inputCommand, char **args, int *argc);
 void mv(char *inputCommand, char **args, int *argc);
 void ping(char *inputCommand, char **args, int *argc);
 void git(char *inputCommand, char **args, int *argc);
+void kill(char *inputCommand, char **args, int *argc);
 void pwd(char*, char**, int*);
 void shtdwn(char*, char**, int*);
 void rstrt(char*, char**, int*);
 void df(char*, char**, int*);
 void ipconfig(char*, char**, int*);
+void ps(char*, char**, int*);
 
 int getCursorY();
 int getCursorX();
