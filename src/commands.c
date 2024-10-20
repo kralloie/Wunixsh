@@ -494,9 +494,13 @@ void rm(char *inputCommand, char **args, int *argc) {
         printf("\rAre you sure? (y/n): %c", confirmation);
         if(tolower(confirmation) == 'y') {
             if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
-                RemoveDirectory(args[1]);
+                if (!RemoveDirectory(args[1])) {
+                    printf("\nFailed to remove directory, it has to be empty.\n");
+                }
             } else {
-                DeleteFile(args[1]);
+                if (!DeleteFile(args[1])) {
+                    printf("\nFailed to remove file.\n");
+                }
             }
         }
         return;
