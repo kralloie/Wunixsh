@@ -25,7 +25,8 @@ const Command commands[] = {
     { "ping", ping },
     { "git", git },
     { "ps", ps },
-    { "kill", kill }
+    { "kill", kill },
+    { "pidof", pidof }
 };
 int commandCount = sizeof(commands) / sizeof(Command);
 
@@ -675,7 +676,6 @@ void git(char *inputCommand, char **args, int *argc) {
 }
 
 void ps(char *inputCommand, char **args, int *argc) {
-    enableDebugPrivilege();
     DWORD processes[2048], bytesReturned, processCount;
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     HANDLE hProcess;
@@ -725,6 +725,48 @@ void kill(char *inputCommand, char **args, int *argc) {
 
     CloseHandle(hProcess);
     return;
+}
+
+void pidof(char *inputCommand, char **args, int *argc) {
+    if (*argc < 2) {
+        printf("Insufficient arguments.\n");
+        return;
+    }
+    char *target = calloc(strlen(args[1]) + 4, sizeof(char));
+    strcpy(target, args[1]);
+    DWORD processes[2048], bytesReturned, processCount;
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE hProcess;
+    char processName[MAX_PATH];
+
+    if(!EnumProcesses(processes, sizeof(processes), &bytesReturned)) {
+        printf("Failed to enumerate processes.\n");
+        return;
+    }
+    processCount = bytesReturned / sizeof(DWORD);
+    if(strstr(target, ".exe") == NULL) {
+        strcat(target, ".exe");
+    }
+    for (int i = 0; i < processCount; i++) {
+        if (processes[i] != 0) {
+            hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processes[i]);
+            if (hProcess) {
+                if (GetModuleBaseName(hProcess, NULL, processName, sizeof(processName))) {
+                    if (strcmp(strToLower(target, strlen(target)), strToLower(processName, strlen(processName))) == 0) {
+                        char *pid = calloc(6, sizeof(char));
+                        snprintf(pid, 6, "%lu", processes[i]);
+                        SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
+                        printf("%s%*s", pid, 6 - strlen(pid), "");
+                        SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
+                        printf("%s\n", processName);
+                        SetConsoleTextAttribute(hConsole, FOREGROUND_WHITE);
+                        free(pid);
+                    }
+                }
+            }
+            CloseHandle(hProcess);
+        }
+    }
 }
 
 // --------- Commands ---------

@@ -57,6 +57,7 @@ void mv(char *inputCommand, char **args, int *argc);
 void ping(char *inputCommand, char **args, int *argc);
 void git(char *inputCommand, char **args, int *argc);
 void kill(char *inputCommand, char **args, int *argc);
+void pidof(char *inputCommand, char **args, int *argc);
 void pwd(char*, char**, int*);
 void shtdwn(char*, char**, int*);
 void rstrt(char*, char**, int*);
