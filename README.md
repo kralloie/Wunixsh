@@ -23,6 +23,7 @@
   - ```ps``` Show list of processes.
   - ```kill``` Kill process with the specified PID.
   - ```pidof``` Search PID with specified name.
+  - ```find``` Search specified file and output the path to it if exists.
 
 ## Features:
   - __Command History__
