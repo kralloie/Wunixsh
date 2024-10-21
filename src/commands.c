@@ -26,7 +26,9 @@ const Command commands[] = {
     { "git", git },
     { "ps", ps },
     { "kill", kill },
-    { "pidof", pidof }
+    { "pidof", pidof },
+    { "find", find }
+
 };
 int commandCount = sizeof(commands) / sizeof(Command);
 
@@ -58,6 +60,44 @@ void getBranch(char *branch) {
         return;
     } else {
         strcpy(branch, "");
+    }
+}
+
+void recursiveDelete(const char *dir) {
+    WIN32_FIND_DATA findFileData;
+    HANDLE hFind;
+    char searchPath[MAX_PATH];
+    char filePath[MAX_PATH];
+    snprintf(searchPath, MAX_PATH, "%s/*", dir);
+    hFind = FindFirstFile(searchPath, &findFileData);
+
+    if (hFind == INVALID_HANDLE_VALUE) {
+        return;
+    }
+
+    do {
+        if (strcmp(findFileData.cFileName, ".") != 0 && strcmp(findFileData.cFileName, "..") != 0) {
+            snprintf(filePath, MAX_PATH, "%s/%s", dir, findFileData.cFileName);
+            DWORD fileAttributes = GetFileAttributes(filePath);
+
+            if (fileAttributes & FILE_ATTRIBUTE_READONLY) {
+                SetFileAttributes(filePath, fileAttributes & ~FILE_ATTRIBUTE_READONLY);
+            }
+
+            if(findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                recursiveDelete(filePath);
+            } else {
+                if (!DeleteFile(filePath)) {
+                    printf("Failed to delete file %s.\n", filePath);
+                }
+            }
+        }
+    } while (FindNextFile(hFind, &findFileData) != 0);
+
+    FindClose(hFind);
+
+    if (!RemoveDirectory(dir)) {
+        printf("Failed to remove dir %s.\n", dir);
     }
 }
 
@@ -484,7 +524,7 @@ void makedir(char *inputCommand, char **args, int *argc) {
 
 void rm(char *inputCommand, char **args, int *argc) {
     if (*argc > 1) {
-        DWORD attributes = GetFileAttributes(args[1]);
+        DWORD attributes = GetFileAttributes(args[*argc - 1]);
         if (attributes == INVALID_FILE_ATTRIBUTES) {
             printf("Invalid name specified.\n");
             return;
@@ -494,11 +534,15 @@ void rm(char *inputCommand, char **args, int *argc) {
         printf("\rAre you sure? (y/n): %c", confirmation);
         if(tolower(confirmation) == 'y') {
             if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
-                if (!RemoveDirectory(args[1])) {
+                if (strcmp(args[1], "-r") == 0) {
+                    recursiveDelete(args[2]);
+                    return;
+                }
+                if (!RemoveDirectory(args[*argc - 1])) {
                     printf("\nFailed to remove directory, it has to be empty.\n");
                 }
             } else {
-                if (!DeleteFile(args[1])) {
+                if (!DeleteFile(args[*argc - 1])) {
                     printf("\nFailed to remove file.\n");
                 }
             }
@@ -689,6 +733,7 @@ void ps(char *inputCommand, char **args, int *argc) {
         printf("Failed to enumerate processes.\n");
         return;
     }
+
     processCount = bytesReturned / sizeof(DWORD);
     printf("\033[1mPID   Name\n\033[0m");
     for (int i = 0; i < processCount; i++) {
@@ -770,6 +815,51 @@ void pidof(char *inputCommand, char **args, int *argc) {
             }
             CloseHandle(hProcess);
         }
+    }
+    free(target);
+}
+
+void recursiveFind(char *path, char *target, char *originalPath) {
+    WIN32_FIND_DATA findFileData;
+    HANDLE hFind;
+    hFind = FindFirstFile(path, &findFileData);
+    do {
+        if (strcmp(strToLower(findFileData.cFileName, strlen(findFileData.cFileName)), target) == 0) {
+            printf("%s/%s\n", originalPath, findFileData.cFileName);
+        }
+        if (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            if (strcmp(findFileData.cFileName, "..") == 0 || strcmp(findFileData.cFileName, ".") == 0) {
+                continue;
+            }
+            char *nextPath = calloc(strlen(path) + strlen(findFileData.cFileName) + 3, sizeof(char));
+            snprintf(nextPath, strlen(path) + strlen(findFileData.cFileName) + 3, "%s/%s/*", originalPath, findFileData.cFileName);
+            char *unmodifiedPath = strdup(nextPath);
+            unmodifiedPath[strlen(unmodifiedPath) - 2] = '\0';
+            recursiveFind(nextPath, target, unmodifiedPath);
+            free(nextPath);
+            free(unmodifiedPath);
+        }
+    } while (FindNextFile(hFind, &findFileData) != 0);
+    FindClose(hFind);
+}
+
+void find(char *inputCommand, char **args, int *argc) {
+    if (*argc < 2) {
+        return;
+    }
+    char *target = strdup(args[1]);
+    strToLower(target, strlen(target));
+    char drives[256];
+    DWORD size = GetLogicalDriveStrings(sizeof(drives), drives);
+    if (size == 0) {
+        return;
+    }
+    for (char *drive = drives; *drive !='\0'; drive += 4) {
+        char *path = calloc(strlen(drive) + 3, sizeof(char));
+        drive[2] = '\0';
+        snprintf(path, strlen(drive) + 3, "%s/*", drive);
+        recursiveFind(path, target, drive);
+        free(path);
     }
 }
 
