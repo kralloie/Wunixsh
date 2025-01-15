@@ -1,7 +1,3 @@
-## Preview:
-
-<img src="https://i.imgur.com/9XTM9sg.png">
-
 ## Available commands:
   - ```ls``` Lists files in current or specified directory.
   - ```cd``` Change directory.
